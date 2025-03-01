@@ -86,7 +86,6 @@ class WebSocketService {
       this.subscribeToNotifications(userId);
 
       // Show toast notification
-      toast.success('Connecté au service de messages');
     };
 
     // On WebSocket error
@@ -208,6 +207,48 @@ class WebSocketService {
       callback: (message) => notificationStore.handleIncomingNotification(message)
     };
   }
+
+  /* S'abonne à un topic spécifique
+  * @param topic Le topic auquel s'abonner
+  * @param callback La fonction callback à appeler lorsqu'un message est reçu
+  * @returns true si l'abonnement a réussi, false sinon
+  */
+ public subscribeToTopic(topic: string, callback: (data: any) => void): boolean {
+   if (!this.client || !this.connected) {
+     console.error('WebSocket not connected.');
+     return false;
+   }
+
+   // Vérifier si on est déjà abonné à ce topic
+   if (this.subscriptions[topic]) {
+     console.log(`Already subscribed to ${topic}`);
+     return true;
+   }
+
+   try {
+     const subscription = this.client.subscribe(topic, (message) => {
+       try {
+         const parsedData = JSON.parse(message.body);
+         callback(parsedData);
+       } catch (e) {
+         console.error(`Error parsing message from ${topic}`, e);
+       }
+     });
+
+     // Stocker l'abonnement
+     this.subscriptions[topic] = {
+       id: subscription.id,
+       callback: callback
+     };
+
+     console.log(`Successfully subscribed to ${topic}`);
+     return true;
+   } catch (error) {
+     console.error(`Error subscribing to ${topic}`, error);
+     return false;
+   }
+ }
+
 
   /**
    * Disconnect WebSocket

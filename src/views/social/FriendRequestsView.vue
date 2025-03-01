@@ -4,7 +4,7 @@
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Demandes d'amis</h1>
         <RouterLink
-          to="/social/friends"
+          to="/friends"
           class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
         >
           <UserGroupIcon class="h-4 w-4 mr-2" />

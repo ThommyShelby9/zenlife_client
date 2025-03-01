@@ -5,6 +5,8 @@ import { useToast } from 'vue-toastification';
 import { notificationApi } from '@/api/notification';
 import websocketService from '@/services/websocketService';
 import axios, { AxiosError } from 'axios';
+import router from '@/router';
+import { useSocialStore } from './social';
 
 
 
@@ -26,45 +28,63 @@ export const useNotificationStore = defineStore('notification', () => {
     return unreadNotifications.value.length;
   });
 
-  // WebSocket handlers
-  const handleIncomingNotification = (notification: Notification) => {
-    // Add notification to the beginning of the list
-    notifications.value.unshift(notification);
+  // Extrait de useNotificationStore.ts modifié pour les notifications d'amitié
 
-    // Display a toast notification based on the type
-    switch (notification.type) {
-      case 'info':
-        toast.info(notification.content);
-        break;
-      case 'success':
-        toast.success(notification.content);
-        break;
-      case 'warning':
-        toast.warning(notification.content);
-        break;
-      case 'error':
-        toast.error(notification.content);
-        break;
-      case 'friend_request':
-        toast.info(`Nouvelle demande d'ami: ${notification.content}`);
-        break;
-      case 'message':
-        toast.info(`Nouveau message: ${notification.content}`);
-        break;
-      case 'reminder':
-          // Utiliser toast.warning pour les rappels de tâches
-          toast.warning(notification.content, {
-            timeout: 10000, // 10 secondes
-            closeOnClick: false, // Ne pas fermer au clic
-            // Ajouter une icône d'horloge ou une autre icône appropriée si désiré
-            icon: true,
-          });
-        break;
-      default:
-        toast.info(notification.content);
-    }
-  };
+// WebSocket handlers
+const handleIncomingNotification = (notification: Notification) => {
+  // Add notification to the beginning of the list
+  notifications.value.unshift(notification);
 
+  // Mettre à jour les compteurs appropriés en fonction du type de notification
+  if (notification.type === 'FRIEND_REQUEST') {
+    const socialStore = useSocialStore();
+    socialStore.updateFriendRequestCount();
+  }
+
+  // Display a toast notification based on the type
+  switch (notification.type) {
+    case 'FRIEND_REQUEST':
+      toast.info(`${notification.content}`, {
+        onClick: () => router.push('/friends/requests')
+      });
+      break;
+    case 'FRIEND_ACCEPTED':
+      toast.success(`${notification.content}`, {
+        onClick: () => router.push('/friends')
+      });
+      break;
+    case 'info':
+      toast.info(notification.content);
+      break;
+    case 'success':
+      toast.success(notification.content);
+      break;
+    case 'warning':
+      toast.warning(notification.content);
+      break;
+    case 'error':
+      toast.error(notification.content);
+      break;
+    case 'message':
+      toast.info(`Nouveau message: ${notification.content}`, {
+        onClick: () => {
+          if (notification.sender && notification.sender.id) {
+            router.push(`/chat?userId=${notification.sender.id}`);
+          }
+        }
+      });
+      break;
+    case 'reminder':
+      toast.warning(notification.content, {
+        timeout: 10000, // 10 secondes
+        closeOnClick: false, // Ne pas fermer au clic
+        icon: true,
+      });
+      break;
+    default:
+      toast.info(notification.content);
+  }
+};
   const createTaskReminder = async (task: any, minutesLeft: number) => {
     const payload: NotificationPayload = {
       type: 'reminder',

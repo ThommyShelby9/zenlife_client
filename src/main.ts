@@ -6,7 +6,9 @@ import './registerServiceWorker';
 import './assets/css/index.css';
 import Toast, { POSITION, type PluginOptions } from 'vue-toastification';
 import 'vue-toastification/dist/index.css';
-
+// Dans main.ts
+import { initServiceWorker } from './registerServiceWorker';
+initServiceWorker();
 
 // Toast options
 const toastOptions: PluginOptions = {

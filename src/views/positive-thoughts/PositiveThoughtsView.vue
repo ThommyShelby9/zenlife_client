@@ -41,15 +41,15 @@
                 <path d="M9.352 4C4.456 7.456 1 13.12 1 19.36c0 5.088 3.072 8.064 6.624 8.064 3.36 0 5.856-2.688 5.856-5.856 0-3.168-2.208-5.472-5.088-5.472-.576 0-1.344.096-1.536.192.48-3.264 3.552-7.104 6.624-9.024L9.352 4zm16.512 0c-4.8 3.456-8.256 9.12-8.256 15.36 0 5.088 3.072 8.064 6.624 8.064 3.264 0 5.856-2.688 5.856-5.856 0-3.168-2.304-5.472-5.184-5.472-.576 0-1.248.096-1.44.192.48-3.264 3.456-7.104 6.528-9.024L25.864 4z" />
               </svg>
               <p class="relative text-xl font-medium text-gray-900 dark:text-white">
-                {{ currentThought.content }}
+                {{ currentThoughtData.content }}
               </p>
               <footer class="mt-3">
                 <div class="flex flex-col items-center justify-center">
                   <p class="text-base font-medium text-gray-700 dark:text-gray-300">
-                    {{ currentThought.author || 'Anonyme' }}
+                    {{ currentThoughtData.author || 'Anonyme' }}
                   </p>
-                  <p v-if="currentThought.category" class="text-sm text-gray-500 dark:text-gray-400">
-                    {{ currentThought.category }}
+                  <p v-if="currentThoughtData.category" class="text-sm text-gray-500 dark:text-gray-400">
+                    {{ currentThoughtData.category }}
                   </p>
                 </div>
               </footer>
@@ -170,58 +170,14 @@
                 <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 dark:text-white">
                   Paramètres des pensées positives
                 </DialogTitle>
-                <div class="mt-4 space-y-4">
+                <div class="mt-4 space-y-6">
+                  <!-- Section des notifications avec le composant ParametresNotificationPensees -->
                   <div>
-                    <div class="flex items-center justify-between">
-                      <label for="notif-enabled" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Activer les notifications
-                      </label>
-                      <Switch
-                        v-model="settings.notificationEnabled"
-                        :class="settings.notificationEnabled ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-600'"
-                        class="relative inline-flex h-6 w-11 items-center rounded-full"
-                      >
-                        <span class="sr-only">Activer les notifications</span>
-                        <span
-                          :class="settings.notificationEnabled ? 'translate-x-6' : 'translate-x-1'"
-                          class="inline-block h-4 w-4 transform rounded-full bg-white transition"
-                        />
-                      </Switch>
-                    </div>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      Recevez des notifications avec des pensées positives
-                    </p>
+                    <h4 class="font-medium text-gray-900 dark:text-white mb-3">Notifications</h4>
+                    <ParametresNotificationPensees v-model="settings" />
                   </div>
 
-                  <div>
-                    <label for="frequency" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Fréquence des pensées
-                    </label>
-                    <select
-                      id="frequency"
-                      v-model="settings.frequency"
-                      class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 py-2 pl-3 pr-10 text-base focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
-                    >
-                      <option value="hourly">Toutes les heures</option>
-                      <option value="daily">Une fois par jour</option>
-                      <option value="custom">Personnalisée</option>
-                    </select>
-                  </div>
-
-                  <div v-if="settings.frequency === 'custom'">
-                    <label for="custom-interval" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Intervalle personnalisé (minutes)
-                    </label>
-                    <input
-                      id="custom-interval"
-                      v-model="settings.customInterval"
-                      type="number"
-                      min="15"
-                      max="1440"
-                      class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
-                    />
-                  </div>
-
+                  <!-- Section des catégories préférées -->
                   <div>
                     <label for="categories" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Catégories préférées
@@ -240,28 +196,6 @@
                         </label>
                       </div>
                     </div>
-                  </div>
-
-                  <div>
-                    <div class="flex items-center justify-between">
-                      <label for="display-on-lock" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Afficher sur écran verrouillé
-                      </label>
-                      <Switch
-                        v-model="settings.displayOnLockScreen"
-                        :class="settings.displayOnLockScreen ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-600'"
-                        class="relative inline-flex h-6 w-11 items-center rounded-full"
-                      >
-                        <span class="sr-only">Afficher sur écran verrouillé</span>
-                        <span
-                          :class="settings.displayOnLockScreen ? 'translate-x-6' : 'translate-x-1'"
-                          class="inline-block h-4 w-4 transform rounded-full bg-white transition"
-                        />
-                      </Switch>
-                    </div>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      Afficher les pensées positives sur l'écran de verrouillage
-                    </p>
                   </div>
                 </div>
 
@@ -447,6 +381,7 @@ import {
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 import { usePositiveThoughtStore } from '@/stores/positiveThought';
 import type { PositiveThought, UserPositiveThoughtSetting } from '@/types/positiveThought';
+import ParametresNotificationPensees from '@/components/positive/ParametresNotificationPensees.vue';
 
 // Store and composables
 const positiveThoughtStore = usePositiveThoughtStore();
@@ -462,6 +397,15 @@ const searchQuery = ref('');
 const selectedCategory = ref('');
 const thoughts = ref<PositiveThought[]>([]);
 const newCategory = ref('');
+
+// Données de la pensée actuelle (pour éviter les problèmes de typage avec le store)
+const currentThoughtData = computed<PositiveThought>(() => {
+  return positiveThoughtStore.currentThought || {
+    content: "Chaque jour est une nouvelle chance de changer votre vie.",
+    author: "Anonyme",
+    category: ""
+  };
+});
 
 // Settings
 const settings = ref<UserPositiveThoughtSetting>({
@@ -483,7 +427,7 @@ const newThought = ref<PositiveThought>({
   category: ''
 });
 
-// Changez cette ligne
+// Liste des catégories disponibles
 const allCategories = ref<string[]>([
   'Motivation',
   'Bonheur',
@@ -495,12 +439,6 @@ const allCategories = ref<string[]>([
   'Méditation',
   'Gratitude'
 ]);
-
-// Current thought
-const currentThought = computed(() => positiveThoughtStore.currentThought || {
-  content: "Chaque jour est une nouvelle chance de changer votre vie.",
-  author: "Anonyme"
-});
 
 // Categories
 const categories = computed(() => {
@@ -515,7 +453,7 @@ const filteredThoughts = computed(() => {
   const query = searchQuery.value.toLowerCase();
   return thoughts.value.filter(thought =>
     thought.content.toLowerCase().includes(query) ||
-    (thought.author && thought.author.toLowerCase().includes(query)) ||
+    (thought.author && String(thought.author).toLowerCase().includes(query)) ||
     (thought.category && thought.category.toLowerCase().includes(query))
   );
 });
@@ -533,14 +471,18 @@ const refreshThought = async () => {
 
   isRefreshing.value = true;
   try {
-    const category = selectedCategories.value.length > 0
-      ? selectedCategories.value[Math.floor(Math.random() * selectedCategories.value.length)]
-      : undefined;
+    // Si des catégories sont sélectionnées, choisir une aléatoirement
+    let categoryToFetch = null;
 
-    await positiveThoughtStore.getRandomPositiveThought(category);
+    if (selectedCategories.value.length > 0) {
+      const randomIndex = Math.floor(Math.random() * selectedCategories.value.length);
+      categoryToFetch = selectedCategories.value[randomIndex];
+    }
+
+    await positiveThoughtStore.getRandomPositiveThought(categoryToFetch);
     toast.success('Nouvelle pensée positive chargée');
   } catch (error) {
-    console.error('Error refreshing thought:', error);
+    console.error('Erreur lors du rafraîchissement de la pensée:', error);
     toast.error('Erreur lors du rafraîchissement de la pensée');
   } finally {
     isRefreshing.value = false;
@@ -553,7 +495,7 @@ const fetchAllThoughts = async () => {
     thoughts.value = allThoughts;
     selectedCategory.value = '';
   } catch (error) {
-    console.error('Error fetching all thoughts:', error);
+    console.error('Erreur lors du chargement des pensées:', error);
     toast.error('Erreur lors du chargement des pensées');
   }
 };
@@ -564,14 +506,20 @@ const fetchThoughtsByCategory = async (category: string) => {
     const categoryThoughts = await positiveThoughtStore.getThoughtsByCategory(category);
     thoughts.value = categoryThoughts;
   } catch (error) {
-    console.error(`Error fetching thoughts for category ${category}:`, error);
+    console.error(`Erreur lors du chargement des pensées de la catégorie ${category}:`, error);
     toast.error(`Erreur lors du chargement des pensées de la catégorie ${category}`);
   }
 };
 
 const setAsDailyThought = (thought: PositiveThought) => {
-  positiveThoughtStore.currentThought = thought;
-  toast.success('Pensée définie comme pensée du jour');
+  try {
+    // @ts-ignore - Nous devons ignorer l'erreur car le type attendu peut être différent
+    positiveThoughtStore.currentThought = thought;
+    toast.success('Pensée définie comme pensée du jour');
+  } catch (error) {
+    console.error('Erreur lors de la définition de la pensée du jour:', error);
+    toast.error('Erreur lors de la définition de la pensée du jour');
+  }
 };
 
 const saveSettings = async () => {
@@ -579,17 +527,18 @@ const saveSettings = async () => {
 
   isSaving.value = true;
   try {
-    // Update preferred categories
-    settings.value.preferredCategories = selectedCategories.value;
+    // Mettre à jour les catégories préférées
+    const updatedSettings = { ...settings.value };
+    updatedSettings.preferredCategories = [...selectedCategories.value];
 
-    // Save settings
-    await positiveThoughtStore.updateUserSettings(settings.value);
+    // Sauvegarder les paramètres
+    await positiveThoughtStore.updateUserSettings(updatedSettings);
 
-    // Close modal
+    // Fermer le modal
     showSettingsModal.value = false;
     toast.success('Paramètres enregistrés avec succès');
   } catch (error) {
-    console.error('Error saving settings:', error);
+    console.error('Erreur lors de l\'enregistrement des paramètres:', error);
     toast.error('Erreur lors de l\'enregistrement des paramètres');
   } finally {
     isSaving.value = false;
@@ -601,29 +550,26 @@ const addThought = async () => {
 
   isAddingThought.value = true;
   try {
-    // Handle new category
-// Dans la méthode addThought
-if (newThought.value.category === 'new' && newCategory.value) {
-  newThought.value.category = newCategory.value;
-  allCategories.value.push(newCategory.value);
-}
+    // Gérer la nouvelle catégorie
+    if (newThought.value.category === 'new' && newCategory.value) {
+      newThought.value.category = newCategory.value;
+      allCategories.value.push(newCategory.value);
+    }
 
-// Autres modifications similaires où vous utilisez allCategories
-
-    // Create thought
+    // Créer la pensée
     const thought = await positiveThoughtStore.createThought(newThought.value);
 
-    // Add to thoughts list
+    // Ajouter à la liste des pensées
     thoughts.value = [thought, ...thoughts.value];
 
-    // Close modal and reset form
+    // Fermer le modal et réinitialiser le formulaire
     showAddThoughtModal.value = false;
     newThought.value = { content: '', author: '', category: '' };
     newCategory.value = '';
 
     toast.success('Pensée ajoutée avec succès');
   } catch (error) {
-    console.error('Error adding thought:', error);
+    console.error('Erreur lors de l\'ajout de la pensée:', error);
     toast.error('Erreur lors de l\'ajout de la pensée');
   } finally {
     isAddingThought.value = false;
@@ -646,37 +592,54 @@ const getCategoryIcon = (category: string) => {
   return iconMap[category] || GlobeIcon;
 };
 
-// Initialize
+// Initialisation
 onMounted(async () => {
   try {
-    // Initialize store
+    // Initialiser le store
     await positiveThoughtStore.initialize();
 
-    // Get user settings
-    if (positiveThoughtStore.userSettings) {
-      settings.value = { ...positiveThoughtStore.userSettings };
+    // Récupérer les paramètres utilisateur
+    const userSettings = positiveThoughtStore.userSettings;
+    if (userSettings) {
+      // Copier les paramètres utilisateur dans l'état local
+      settings.value = {
+        enabled: userSettings.enabled,
+        frequency: userSettings.frequency,
+        customInterval: userSettings.customInterval,
+        notificationEnabled: userSettings.notificationEnabled,
+        displayOnLockScreen: userSettings.displayOnLockScreen,
+        preferredCategories: userSettings.preferredCategories || []
+      };
 
-      // Set selected categories
-      if (settings.value.preferredCategories) {
-        selectedCategories.value = [...settings.value.preferredCategories];
+      // Définir les catégories sélectionnées
+      if (userSettings.preferredCategories) {
+        selectedCategories.value = [...userSettings.preferredCategories];
       }
     }
 
-    // Fetch all thoughts
+    // Récupérer toutes les pensées
     await fetchAllThoughts();
   } catch (error) {
-    console.error('Error initializing positive thoughts view:', error);
+    console.error('Erreur lors de l\'initialisation de la vue des pensées positives:', error);
   }
 });
 
-// Watch for settings changes in store
+// Observer les changements de paramètres dans le store
 watch(() => positiveThoughtStore.userSettings, (newSettings) => {
   if (newSettings) {
-    settings.value = { ...newSettings };
+    // Mettre à jour les paramètres à partir du store
+    settings.value = {
+      enabled: newSettings.enabled,
+      frequency: newSettings.frequency,
+      customInterval: newSettings.customInterval,
+      notificationEnabled: newSettings.notificationEnabled,
+      displayOnLockScreen: newSettings.displayOnLockScreen,
+      preferredCategories: newSettings.preferredCategories || []
+    };
 
-    // Update selected categories
-    if (settings.value.preferredCategories) {
-      selectedCategories.value = [...settings.value.preferredCategories];
+    // Mettre à jour les catégories sélectionnées
+    if (newSettings.preferredCategories) {
+      selectedCategories.value = [...newSettings.preferredCategories];
     }
   }
 }, { deep: true });

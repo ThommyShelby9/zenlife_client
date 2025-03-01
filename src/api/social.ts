@@ -4,7 +4,7 @@ import type {
   FriendRequest,
   FriendshipResponse,
   User,
-  SearchUsersResponse
+  BlockedUser
 } from '@/types/social';
 
 export const socialApi = {
@@ -14,13 +14,28 @@ export const socialApi = {
   },
 
   // Recherche d'utilisateurs
-  searchUsers: (query: string) => {
-    return apiClient.get<User[]>(`/users/search?q=${encodeURIComponent(query)}`);
+  searchUsers: (searchTerm: string) => {
+    // Utiliser 'q' comme nom de paramètre pour correspondre à l'attente du backend
+    return apiClient.get<User[]>(`/friends/users/search?q=${encodeURIComponent(searchTerm)}`);
   },
 
   // Demandes d'amis
   getFriendRequests: () => {
-    return apiClient.get<FriendRequest[]>('/friends/requests');
+    // Combinaison des demandes reçues et envoyées
+    return Promise.all([
+      apiClient.get<FriendRequest[]>('/friends/requests/pending'),
+      apiClient.get<FriendRequest[]>('/friends/requests/sent')
+    ]).then(([pending, sent]) => {
+      const pendingRequests = pending.data.map(req => ({
+        ...req,
+        isOutgoing: false
+      }));
+      const sentRequests = sent.data.map(req => ({
+        ...req,
+        isOutgoing: true
+      }));
+      return { data: [...pendingRequests, ...sentRequests] };
+    });
   },
 
   getPendingFriendRequests: () => {
@@ -46,7 +61,7 @@ export const socialApi = {
     return apiClient.post<FriendshipResponse>(`/friends/reject/${requestId}`);
   },
 
-  // Annuler une demande d'ami envoyée
+  // Annuler une demande d'ami envoyée (à implémenter côté backend)
   cancelFriendRequest: (requestId: string) => {
     return apiClient.delete(`/friends/request/${requestId}`);
   },
@@ -66,8 +81,8 @@ export const socialApi = {
     return apiClient.post<FriendshipResponse>(`/friends/unblock/${userId}`);
   },
 
-  // Obtenir les utilisateurs bloqués
+  // Obtenir les utilisateurs bloqués (à implémenter côté backend)
   getBlockedUsers: () => {
-    return apiClient.get('/friends/blocked');
+    return apiClient.get<BlockedUser[]>('/friends/blocked');
   }
 };

@@ -1,21 +1,27 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import type { PositiveThought, UserPositiveThoughtSetting } from '@/types/positiveThought';
 import { positiveThoughtApi } from '@/api/positiveThought';
+import { useNotificationStore } from '@/stores/notification';
+import { useToast } from 'vue-toastification';
 
 export const usePositiveThoughtStore = defineStore('positiveThought', () => {
-  // State
+  // State avec typage correct
   const currentThought = ref<PositiveThought | null>(null);
   const userSettings = ref<UserPositiveThoughtSetting | null>(null);
   const allThoughts = ref<PositiveThought[]>([]);
   const categories = ref<string[]>([]);
   const isLoading = ref<boolean>(false);
 
+  // Services
+  const notificationStore = useNotificationStore();
+  const toast = useToast();
+
   // Actions
-  const getRandomPositiveThought = async (category?: string): Promise<PositiveThought> => {
+  const getRandomPositiveThought = async (category?: string | null) => {
     isLoading.value = true;
     try {
-      const response = await positiveThoughtApi.getRandomThought(category);
+      const response = await positiveThoughtApi.getRandomThought(category || undefined);
 
       // Vérification et conversion explicite
       const thought: PositiveThought = {
@@ -30,7 +36,9 @@ export const usePositiveThoughtStore = defineStore('positiveThought', () => {
       currentThought.value = thought;
       return thought;
     } catch (error) {
-      // Fallback à une pensée par défaut
+      console.error('Erreur lors de la récupération d\'une pensée aléatoire:', error);
+
+      // Pensée par défaut en cas d'erreur
       const defaultThought: PositiveThought = {
         id: undefined,
         content: "Chaque jour est une nouvelle chance de changer votre vie.",
@@ -47,85 +55,84 @@ export const usePositiveThoughtStore = defineStore('positiveThought', () => {
     }
   };
 
-  const getAllThoughts = async (): Promise<PositiveThought[]> => {
+  const getAllThoughts = async () => {
     isLoading.value = true;
     try {
       const response = await positiveThoughtApi.getAllThoughts();
       allThoughts.value = response.data;
 
-      // Extract unique categories
-      const uniqueCategories = new Set<string>();
+      // Extraction des catégories uniques
+      const categoriesUniques = new Set<string>();
       allThoughts.value.forEach(thought => {
         if (thought.category) {
-          uniqueCategories.add(thought.category);
+          categoriesUniques.add(thought.category);
         }
       });
-      categories.value = Array.from(uniqueCategories);
+      categories.value = Array.from(categoriesUniques);
 
       return allThoughts.value;
+    } catch (error) {
+      console.error('Erreur lors de la récupération de toutes les pensées:', error);
+      return [];
     } finally {
       isLoading.value = false;
     }
   };
 
-  const getThoughtsByCategory = async (category: string): Promise<PositiveThought[]> => {
+  const getThoughtsByCategory = async (category: string) => {
     isLoading.value = true;
     try {
       const response = await positiveThoughtApi.getThoughtsByCategory(category);
       return response.data;
+    } catch (error) {
+      console.error(`Erreur lors de la récupération des pensées pour la catégorie ${category}:`, error);
+      return [];
     } finally {
       isLoading.value = false;
     }
   };
 
-  const createThought = async (thought: PositiveThought): Promise<PositiveThought> => {
+  const createThought = async (thought: PositiveThought) => {
     isLoading.value = true;
     try {
       const response = await positiveThoughtApi.createPositiveThought(thought);
 
-      // Add to local collection if successful
-      allThoughts.value = [response.data.thought, ...allThoughts.value];
+      // Ajouter à la collection locale si succès
+      const newThought = response.data.thought;
+      if (newThought) {
+        allThoughts.value = [newThought, ...allThoughts.value];
 
-      // Add category if new
-      if (thought.category && !categories.value.includes(thought.category)) {
-        categories.value.push(thought.category);
+        // Ajouter la catégorie si nouvelle
+        if (newThought.category && !categories.value.includes(newThought.category)) {
+          categories.value.push(newThought.category);
+        }
       }
 
-      return response.data.thought;
+      return newThought;
+    } catch (error) {
+      console.error('Erreur lors de la création d\'une pensée:', error);
+      throw error;
     } finally {
       isLoading.value = false;
     }
   };
 
-  const getUserSettings = async (): Promise<UserPositiveThoughtSetting> => {
+  const getUserSettings = async () => {
     isLoading.value = true;
     try {
       const response = await positiveThoughtApi.getUserSettings();
-
-      // Vérification et conversion explicite
-      const settings: UserPositiveThoughtSetting = {
-        id: response.data?.id,
-        userId: response.data?.userId,
-        enabled: response.data?.enabled ?? true, // Valeur par défaut true
-        frequency: response.data?.frequency || 'daily', // Valeur par défaut 'daily'
-        customInterval: response.data?.customInterval,
-        preferredCategories: response.data?.preferredCategories || [],
-        notificationEnabled: response.data?.notificationEnabled ?? true, // Valeur par défaut true
-        displayOnLockScreen: response.data?.displayOnLockScreen ?? false, // Valeur par défaut false
-        createdAt: response.data?.createdAt,
-        updatedAt: response.data?.updatedAt
-      };
-
-      userSettings.value = settings;
-      return settings;
+      userSettings.value = response.data;
+      return userSettings.value;
     } catch (error) {
-      // Fallback à des paramètres par défaut
+      console.error('Erreur lors de la récupération des paramètres utilisateur:', error);
+
+      // Paramètres par défaut en cas d'erreur
       const defaultSettings: UserPositiveThoughtSetting = {
         id: undefined,
         userId: undefined,
         enabled: true,
         frequency: 'daily',
-        customInterval: 60, // Intervalle par défaut de 60 minutes
+        customInterval: 30, // 30 minutes par défaut
         preferredCategories: [],
         notificationEnabled: true,
         displayOnLockScreen: false,
@@ -140,57 +147,96 @@ export const usePositiveThoughtStore = defineStore('positiveThought', () => {
     }
   };
 
-  const updateUserSettings = async (
-    settings: UserPositiveThoughtSetting
-  ): Promise<UserPositiveThoughtSetting> => {
+  const updateUserSettings = async (settings: UserPositiveThoughtSetting) => {
     isLoading.value = true;
     try {
+      // Mettre à jour les paramètres
       const response = await positiveThoughtApi.updateUserSettings(settings);
 
-      // Vérification et conversion explicite
-      const updatedSettings: UserPositiveThoughtSetting = {
-        id: response.data.settings?.id,
-        userId: response.data.settings?.userId,
-        enabled: response.data.settings?.enabled ?? true,
-        frequency: response.data.settings?.frequency || 'daily',
-        customInterval: response.data.settings?.customInterval,
-        preferredCategories: response.data.settings?.preferredCategories || [],
-        notificationEnabled: response.data.settings?.notificationEnabled ?? true,
-        displayOnLockScreen: response.data.settings?.displayOnLockScreen ?? false,
-        createdAt: response.data.settings?.createdAt,
-        updatedAt: response.data.settings?.updatedAt
-      };
+      // Mettre à jour l'état local
+      if (response.data && response.data.settings) {
+        userSettings.value = response.data.settings;
+      }
 
-      userSettings.value = updatedSettings;
-      return updatedSettings;
+      // Mettre à jour les abonnements aux notifications
+      if (settings.notificationEnabled) {
+        await updateNotificationSubscription(settings);
+      }
+
+      return userSettings.value;
     } catch (error) {
-      // Fallback aux paramètres actuels ou aux paramètres par défaut
-      const fallbackSettings: UserPositiveThoughtSetting = {
-        ...settings,
-        enabled: settings.enabled ?? true,
-        frequency: settings.frequency || 'daily',
-        preferredCategories: settings.preferredCategories || [],
-        notificationEnabled: settings.notificationEnabled ?? true,
-        displayOnLockScreen: settings.displayOnLockScreen ?? false,
-        updatedAt: new Date().toISOString()
-      };
-
-      userSettings.value = fallbackSettings;
-      return fallbackSettings;
+      console.error('Erreur lors de la mise à jour des paramètres utilisateur:', error);
+      throw error;
     } finally {
       isLoading.value = false;
     }
   };
 
-  // Initialize
+  // Mettre à jour l'abonnement aux notifications
+  const updateNotificationSubscription = async (settings: UserPositiveThoughtSetting) => {
+    try {
+      // Créer un objet qui correspond au format attendu par l'API
+      const notificationSettings = {
+        notificationEnabled: settings.notificationEnabled,
+        frequency: settings.frequency,
+        customInterval: settings.customInterval || 30, // Valeur par défaut si manquante
+        displayOnLockScreen: settings.displayOnLockScreen || false,
+        preferredCategories: settings.preferredCategories || []
+      };
+
+      await positiveThoughtApi.subscribeToPositiveThoughtNotifications(notificationSettings);
+
+      // Afficher un message de succès
+
+      return true;
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour des abonnements de notification:', error);
+
+      // Afficher un message d'erreur
+      toast.error('Impossible de mettre à jour les notifications');
+
+      throw error;
+    }
+  };
+
+  // Gérer une notification entrante de pensée positive
+  const handlePositiveThoughtNotification = (notification: {
+    type: string;
+    data?: {
+      thought?: PositiveThought
+    };
+    content: string;
+  }) => {
+    // Vérifier si c'est une notification de pensée positive
+    if (notification.type === 'POSITIVE_THOUGHT') {
+      // Mettre à jour la pensée actuelle si nécessaire
+      if (notification.data?.thought) {
+        currentThought.value = notification.data.thought;
+      }
+
+      // Afficher une notification visuelle
+      toast.info(notification.content, {
+        timeout: 10000, // 10 secondes
+        closeOnClick: true,
+        icon: '✨'
+      });
+    }
+  };
+
+  // Initialisation
   const initialize = async () => {
     try {
       await Promise.all([
-        getRandomPositiveThought(),
+        getRandomPositiveThought(null),
         getUserSettings()
       ]);
+
+      // S'abonner aux notifications si activées
+      if (userSettings.value?.notificationEnabled) {
+        await updateNotificationSubscription(userSettings.value);
+      }
     } catch (error) {
-      console.error('Failed to initialize positive thought store:', error);
+      console.error('Erreur lors de l\'initialisation du store des pensées positives:', error);
     }
   };
 
@@ -209,6 +255,8 @@ export const usePositiveThoughtStore = defineStore('positiveThought', () => {
     createThought,
     getUserSettings,
     updateUserSettings,
+    updateNotificationSubscription,
+    handlePositiveThoughtNotification,
     initialize
   };
 });

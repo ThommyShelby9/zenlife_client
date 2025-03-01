@@ -5,7 +5,7 @@
         <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Mes amis</h1>
         <div class="flex space-x-3">
           <RouterLink
-            to="/social/friend-requests"
+            to="/friend-requests"
             class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
           >
             <BellIcon class="h-4 w-4 mr-2" />
@@ -31,11 +31,11 @@
             <SearchIcon class="h-5 w-5 text-gray-400" />
           </div>
           <input
-            type="text"
-            v-model="search"
-            class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
-            placeholder="Rechercher un ami..."
-          />
+  type="text"
+  v-model="search"
+  class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-base dark:bg-gray-700 dark:text-white"
+  placeholder="Rechercher un ami..."
+/>
         </div>
       </div>
 
@@ -168,12 +168,12 @@
                       </label>
                       <div class="mt-1">
                         <input
-                          id="search-friend"
-                          v-model="friendSearch"
-                          type="text"
-                          class="block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
-                          placeholder="@username ou email@example.com"
-                        />
+  id="search-friend"
+  v-model="friendSearch"
+  type="text"
+  class="block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-base dark:bg-gray-700 dark:text-white py-3"
+  placeholder="@username ou email@example.com"
+/>
                       </div>
                     </div>
 
@@ -573,7 +573,11 @@ const searchUsers = async () => {
 
   isSearching.value = true;
   try {
-    searchResults.value = await socialStore.searchUsers(friendSearch.value);
+    // Assurez-vous que le terme de recherche est passé correctement
+    const response = await socialStore.searchUsers(friendSearch.value);
+    searchResults.value = response;
+
+    console.log('Résultats de recherche:', searchResults.value);
   } catch (error) {
     console.error('Error searching users:', error);
     toast.error('Erreur lors de la recherche d\'utilisateurs');
@@ -581,7 +585,6 @@ const searchUsers = async () => {
     isSearching.value = false;
   }
 };
-
 const sendFriendRequest = async (user: User) => {
   if (isSending.value) return;
 
