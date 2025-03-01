@@ -35,7 +35,7 @@
                       min="500"
                       max="5000"
                       step="100"
-                      class="block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white pr-16"
+                      class="block w-full h-10 rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white pr-16"
                       placeholder="2000"
                     />
                     <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -70,7 +70,7 @@
                     <div class="flex items-center h-5">
                       <input
                         id="reminder-enabled"
-                        v-model="settingsForm.reminderEnabled"
+                        v-model="settingsForm.enabled"
                         type="checkbox"
                         class="focus:ring-primary-500 h-4 w-4 text-primary-600 border-gray-300 dark:border-gray-700 rounded dark:bg-gray-700"
                       />
@@ -82,7 +82,7 @@
                   </div>
                 </div>
 
-                <div v-if="settingsForm.reminderEnabled" class="mt-4 space-y-4">
+                <div v-if="settingsForm.enabled" class="mt-4 space-y-4">
                   <div>
                     <label for="reminder-interval" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Intervalle entre les rappels (en minutes)
@@ -91,7 +91,7 @@
                       <select
                         id="reminder-interval"
                         v-model="settingsForm.reminderInterval"
-                        class="block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                        class="block w-full h-10 rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
                       >
                         <option value="30">30 minutes</option>
                         <option value="60">1 heure</option>
@@ -111,9 +111,9 @@
                       <div class="mt-1">
                         <input
                           id="start-time"
-                          v-model="settingsForm.startTime"
+                          v-model="startTimeInput"
                           type="time"
-                          class="block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                          class="block w-full h-10 rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
                         />
                       </div>
                     </div>
@@ -124,9 +124,9 @@
                       <div class="mt-1">
                         <input
                           id="end-time"
-                          v-model="settingsForm.endTime"
+                          v-model="endTimeInput"
                           type="time"
-                          class="block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                          class="block w-full h-10 rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
                         />
                       </div>
                     </div>
@@ -160,7 +160,7 @@
                         type="number"
                         min="50"
                         max="2000"
-                        class="block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white pr-10"
+                        class="block w-full h-10 rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white pr-10"
                       />
                       <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                         <span class="text-gray-500 dark:text-gray-400 sm:text-sm">ml</span>
@@ -169,7 +169,7 @@
                     <button
                       type="button"
                       @click="addCustomGlassSize"
-                      class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                      class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 h-10"
                     >
                       <PlusIcon class="h-4 w-4" />
                     </button>
@@ -243,16 +243,32 @@
             <div>
               <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">Exporter les données</h4>
               <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Téléchargez vos données d'hydratation au format CSV pour une analyse personnelle.
+                Téléchargez vos données d'hydratation dans différents formats pour une analyse personnelle.
               </p>
-              <div class="mt-3">
+              <div class="mt-3 flex flex-wrap gap-3">
                 <button
                   type="button"
-                  @click="exportData"
+                  @click="exportData('csv')"
                   class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                 >
-                  <DownloadIcon class="h-4 w-4 mr-2" />
-                  Exporter les données
+                  <DocumentTextIcon class="h-4 w-4 mr-2" />
+                  Exporter en CSV
+                </button>
+                <button
+                  type="button"
+                  @click="exportData('excel')"
+                  class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                >
+                  <DocumentReportIcon class="h-4 w-4 mr-2" />
+                  Exporter en Excel
+                </button>
+                <button
+                  type="button"
+                  @click="exportData('pdf')"
+                  class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                >
+                  <DocumentIcon class="h-4 w-4 mr-2" />
+                  Exporter en PDF
                 </button>
               </div>
             </div>
@@ -363,10 +379,17 @@ import {
   PlusIcon,
   TrashIcon,
   XIcon,
+  DocumentTextIcon,
+  DocumentReportIcon,
+  DocumentIcon
 } from '@heroicons/vue/outline';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 import { useWaterReminderStore } from '@/stores/waterReminder';
 import type { WaterReminderSetting } from '@/types/waterReminder';
+// Modifier les imports pour jsPDF et autoTable
+import jspdf from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 // Store and composables
 const waterStore = useWaterReminderStore();
@@ -380,22 +403,50 @@ const customGlassSize = ref<number>(0);
 const customGlassSizeError = ref<string>('');
 const customGlassSizes = ref<number[]>([]);
 
-// Settings form
-const settingsForm = reactive<WaterReminderSetting>({
-  dailyGoalML: 2000,
-  reminderEnabled: true,
-  reminderInterval: 60,
-  startTime: '08:00',
-  endTime: '20:00'
-});
+// Time inputs
+const startTimeInput = ref('08:00');
+const endTimeInput = ref('20:00');
 
 // Default settings
 const defaultSettings: WaterReminderSetting = {
   dailyGoalML: 2000,
   reminderEnabled: true,
   reminderInterval: 60,
-  startTime: '08:00',
-  endTime: '20:00'
+  startTime: new Date().toISOString().replace('Z', '+00:00'), // Modifier pour la compatibilité backend
+  endTime: new Date().toISOString().replace('Z', '+00:00'), // Modifier pour la compatibilité backend
+  customGlassSizes: [],
+  enabled: undefined
+};
+
+// Settings form
+const settingsForm = reactive<WaterReminderSetting>({
+  dailyGoalML: 2000,
+  reminderEnabled: true,
+  reminderInterval: 60,
+  startTime: new Date().toISOString().replace('Z', '+00:00'), // Modifier pour la compatibilité backend
+  endTime: new Date().toISOString().replace('Z', '+00:00'), // Modifier pour la compatibilité backend
+  customGlassSizes: [],
+  enabled: undefined
+});
+
+// Helpers for time conversion
+const timeStringToInstant = (timeStr: string): string => {
+  const now = new Date();
+  const [hours, minutes] = timeStr.split(':').map(Number);
+
+  now.setHours(hours, minutes, 0, 0);
+  // Remplacer le Z par +00:00 pour éviter le problème avec le backend
+  return now.toISOString().replace('Z', '+00:00');
+};
+
+const instantToTimeString = (instant: string): string => {
+  try {
+    const date = new Date(instant);
+    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  } catch (error) {
+    console.error('Error parsing date:', error);
+    return '00:00';
+  }
 };
 
 // Methods
@@ -409,8 +460,15 @@ const loadSettings = async () => {
       settingsForm.dailyGoalML = waterStore.settings.dailyGoalML;
       settingsForm.reminderEnabled = waterStore.settings.reminderEnabled;
       settingsForm.reminderInterval = waterStore.settings.reminderInterval;
-      settingsForm.startTime = waterStore.settings.startTime;
-      settingsForm.endTime = waterStore.settings.endTime;
+
+      // Gérer les heures (conversion entre string et Instant)
+      if (waterStore.settings.startTime) {
+        startTimeInput.value = instantToTimeString(waterStore.settings.startTime);
+      }
+
+      if (waterStore.settings.endTime) {
+        endTimeInput.value = instantToTimeString(waterStore.settings.endTime);
+      }
 
       // Gérer les tailles de verre personnalisées si elles existent
       if (waterStore.settings.customGlassSizes && Array.isArray(waterStore.settings.customGlassSizes)) {
@@ -428,6 +486,10 @@ const saveSettings = async () => {
 
   isSaving.value = true;
   try {
+    // Conversion des heures de string à Instant
+    settingsForm.startTime = timeStringToInstant(startTimeInput.value);
+    settingsForm.endTime = timeStringToInstant(endTimeInput.value);
+
     // Créer un objet de paramètres avec les tailles de verre personnalisées
     const updatedSettings: WaterReminderSetting = {
       ...settingsForm,
@@ -449,6 +511,8 @@ const resetSettings = () => {
   settingsForm.dailyGoalML = defaultSettings.dailyGoalML;
   settingsForm.reminderEnabled = defaultSettings.reminderEnabled;
   settingsForm.reminderInterval = defaultSettings.reminderInterval;
+  startTimeInput.value = '08:00';
+  endTimeInput.value = '20:00';
   settingsForm.startTime = defaultSettings.startTime;
   settingsForm.endTime = defaultSettings.endTime;
   customGlassSizes.value = [];
@@ -483,34 +547,172 @@ const removeGlassSize = (index: number) => {
   customGlassSizes.value.splice(index, 1);
 };
 
-const exportData = async () => {
+const createExportData = async () => {
+  // Récupérer l'historique des données d'hydratation
+  await waterStore.fetchIntakeHistory();
+
+  // Formater les données pour l'export
+  return waterStore.intakeHistory.map(intake => ({
+    Date: new Date(intake.timestamp).toLocaleDateString(),
+    Heure: new Date(intake.timestamp).toLocaleTimeString(),
+    Quantite: `${intake.quantityML} ml`,
+    QuantiteL: `${(intake.quantityML / 1000).toFixed(2)} L`,
+  }));
+};
+
+const exportData = async (format: 'csv' | 'excel' | 'pdf') => {
   try {
-    // Récupérer l'historique des données d'hydratation
-    await waterStore.fetchIntakeHistory();
+    const exportData = await createExportData();
 
-    // Formatage simple du CSV
-    const header = "Date,Quantité (ml)\n";
-    const data = waterStore.intakeHistory.map(intake =>
-      `${new Date(intake.timestamp).toISOString().split('T')[0]},${intake.quantityML}`
-    ).join("\n");
+    // Si aucune donnée, afficher un message d'avertissement
+    if (exportData.length === 0) {
+      toast.warning("Aucune donnée à exporter");
+      return;
+    }
 
-    const csvContent = header + data;
+    const filename = `hydration_data_${new Date().toISOString().split('T')[0]}`;
 
-    // Créer et télécharger le fichier CSV
-    const filename = `hydration_data_${new Date().toISOString().split('T')[0]}.csv`;
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
+    if (format === 'csv') {
+      // Formatage CSV
+      const header = "Date,Heure,Quantité (ml),Quantité (L)\n";
+      const rows = exportData.map(item =>
+        `${item.Date},${item.Heure},${item.Quantite},${item.QuantiteL}`
+      ).join("\n");
 
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
+      const csvContent = header + rows;
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
 
-    window.URL.revokeObjectURL(url);
-    toast.success('Données exportées avec succès');
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    }
+    else if (format === 'excel') {
+      // Formatage Excel
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Hydratation");
+
+      // Ajouter des styles et mettre en forme
+      worksheet['!cols'] = [
+        { width: 15 }, // Date
+        { width: 15 }, // Heure
+        { width: 15 }, // Quantité ml
+        { width: 15 }, // Quantité L
+      ];
+
+      XLSX.writeFile(workbook, `${filename}.xlsx`);
+    }
+    else if (format === 'pdf') {
+      try {
+        // Créer un nouveau document PDF
+        const doc = new jspdf();
+
+        // Ajouter un titre
+        doc.setFontSize(18);
+        doc.setTextColor(44, 62, 80);
+        doc.text("Rapport d'Hydratation ZenLife", 105, 15, { align: 'center' });
+
+        // Ajouter la date de génération
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Généré le: ${new Date().toLocaleDateString()} à ${new Date().toLocaleTimeString()}`, 105, 25, { align: 'center' });
+
+        // Ajouter un résumé
+        doc.setFontSize(12);
+        doc.setTextColor(44, 62, 80);
+        doc.text(`Nombre total d'entrées: ${exportData.length}`, 20, 35);
+
+        if (exportData.length > 0) {
+          // Trouver la quantité totale
+          const totalQuantity = exportData.reduce((sum, item) => {
+            const qty = parseInt(item.Quantite.replace(' ml', ''));
+            return sum + qty;
+          }, 0);
+
+          doc.text(`Quantité totale: ${totalQuantity} ml (${(totalQuantity / 1000).toFixed(2)} L)`, 20, 45);
+        }
+
+        // Créer le tableau manuellement si autoTable n'est pas disponible
+        if (typeof doc.autoTable !== 'function') {
+          console.log("Utilisation d'une méthode alternative pour créer le tableau");
+
+          // Définir les positions du tableau
+          const startY = 55;
+          const rowHeight = 10;
+          const colWidths = [40, 40, 40, 40];
+          const startX = 20;
+
+          // Créer l'en-tête du tableau
+          doc.setFillColor(41, 128, 185);
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(10);
+          doc.rect(startX, startY, colWidths.reduce((a, b) => a + b, 0), rowHeight, 'F');
+
+          // Texte d'en-tête
+          const headers = ['Date', 'Heure', 'Quantité (ml)', 'Quantité (L)'];
+          let currentX = startX;
+          headers.forEach((header, index) => {
+            doc.text(header, currentX + 5, startY + 7);
+            currentX += colWidths[index];
+          });
+
+          // Lignes des données
+          let currentY = startY + rowHeight;
+          exportData.forEach((item, rowIndex) => {
+            // Alternance de couleurs
+            if (rowIndex % 2 === 0) {
+              doc.setFillColor(240, 240, 240);
+              doc.rect(startX, currentY, colWidths.reduce((a, b) => a + b, 0), rowHeight, 'F');
+            }
+
+            // Texte de la ligne
+            doc.setTextColor(0, 0, 0);
+            currentX = startX;
+            [item.Date, item.Heure, item.Quantite, item.QuantiteL].forEach((value, index) => {
+              doc.text(value, currentX + 5, currentY + 7);
+              currentX += colWidths[index];
+            });
+
+            currentY += rowHeight;
+          });
+        } else {
+          // Utiliser autoTable si disponible
+          doc.autoTable({
+            head: [['Date', 'Heure', 'Quantité (ml)', 'Quantité (L)']],
+            body: exportData.map(item => [item.Date, item.Heure, item.Quantite, item.QuantiteL]),
+            startY: 55,
+            theme: 'grid',
+            headStyles: {
+              fillColor: [41, 128, 185],
+              textColor: [255, 255, 255],
+              fontStyle: 'bold'
+            },
+            alternateRowStyles: {
+              fillColor: [240, 240, 240]
+            },
+            margin: { top: 60 },
+          });
+        }
+
+        // Ajouter un pied de page
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text(`ZenLife - Suivi d'hydratation - Page 1`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+
+        // Sauvegarder le PDF
+        doc.save(`${filename}.pdf`);
+      } catch (err) {
+        console.error("Erreur lors de la génération du PDF:", err);
+        throw err;
+      }
+    }
+    toast.success(`Données exportées avec succès au format ${format.toUpperCase()}`);
   } catch (error) {
-    console.error('Error exporting data:', error);
-    toast.error('Erreur lors de l\'exportation des données');
+    console.error(`Error exporting data to ${format}:`, error);
+    toast.error(`Erreur lors de l'exportation des données en ${format.toUpperCase()}`);
   }
 };
 
@@ -523,12 +725,12 @@ const resetHistory = async () => {
 
   isResetting.value = true;
   try {
-    // Réinitialiser l'historique en effaçant les données
-    waterStore.intakeHistory.splice(0, waterStore.intakeHistory.length);
-    waterStore.todayIntake = 0;
+    // Appeler l'API pour réinitialiser l'historique
+    await waterStore.resetHistory();
 
-    // Nous pourrions avoir besoin d'une API pour vraiment supprimer les données du backend
-    // Si cette API n'existe pas, nous devons au moins mettre à jour le store
+    // Mise à jour locale
+    waterStore.intakeHistory = [];
+    waterStore.todayIntake = 0;
 
     toast.success('Historique réinitialisé avec succès');
     showResetModal.value = false;

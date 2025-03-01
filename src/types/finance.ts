@@ -24,11 +24,11 @@ export interface Expense {
   updatedAt?: string;
 }
 
-// Dans votre fichier types/finance.ts
+// Dans types/finance.ts
 export interface Budget {
   id?: string;
   userId?: string;
-  categoryId: string;
+  categoryId: string; // Chaîne vide pour budget global, ID de catégorie pour sous-budget
   category?: ExpenseCategory;
   amount: number;
   yearMonth: string; // Format: YYYY-MM
@@ -37,10 +37,19 @@ export interface Budget {
 
   // Propriétés étendues pour l'affichage
   spent?: number;    // Montant dépensé (calculé)
-  month?: string;    // Format pour l'affichage, peut être undefined
-  notes?: string;    // Ajout des notes
+  month?: string;    // Format pour l'affichage
+  notes?: string;    // Notes sur le budget
+  isGlobal?: boolean; // Propriété calculée, true si categoryId est vide
 }
-
+// Dans types/finance.ts - Ajouter cette interface
+export interface BudgetDTO {
+  id?: string;
+  categoryId: string; // Chaîne vide pour budget global, ID de catégorie sinon
+  amount: number;
+  yearMonth: string;
+  notes?: string;
+  alertThresholdPercentage?: number;
+}
 export interface FinancialSummary {
   totalExpenses: number;
   totalBudget: number;
@@ -71,5 +80,14 @@ export interface ExpenseDTO {
   amount: number;
   date: string;
   category: ExpenseCategoryDTO; // Ou simplement { id: string }
+  description?: string;
+}
+
+// DTO pour les opérations de création/mise à jour d'une dépense
+export interface ExpenseCreateUpdateDTO {
+  title: string;
+  amount: number;
+  date: string;
+  categoryId: string; // Utiliser seulement l'ID au lieu de l'objet complet
   description?: string;
 }

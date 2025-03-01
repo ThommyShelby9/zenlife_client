@@ -191,41 +191,55 @@ export const useFinanceStore = defineStore('finance', () => {
       const response = await financeApi.getMonthlyFinancialSummary(date);
       const data = response.data;
 
-      console.log("Données brutes reçues du backend:", data);
+      console.log("Données reçues du backend:", data);
 
-      // Transformation des données au format attendu par le frontend
+      // Transformation des données
       const transformed: FinancialSummary = {
         totalExpenses: data.totalExpenses || 0,
         totalBudget: data.budgetAmount || 0,
-        remaining: data.remaining || (data.budgetAmount ? data.budgetAmount - data.totalExpenses : 0),
+        remaining: data.budgetAmount ? data.budgetAmount - data.totalExpenses : 0,
         spentPercentage: data.percentageUsed || 0,
         budgetStatus:
           data.percentageUsed < 80 ? 'under' :
           data.percentageUsed < 100 ? 'near' : 'over',
 
-        // Transformation de l'objet byCategory en tableau d'objets
+        // Transformation de l'objet byCategory en tableau
         categoryBreakdown: Object.entries(data.byCategory || {}).map(([name, amount]) => {
-          // Trouver la catégorie complète par son nom
-          const category = categories.value.find(c => c.name === name) || {
-            id: 'unknown',
+          // Chercher la catégorie complète par son nom
+          const categoryObj = categories.value.find(c => c.name === name);
+
+          // Si la catégorie n'est pas trouvée, créer un objet temporaire
+          const category = categoryObj || {
+            id: '',
             name: name,
-            color: '#9CA3AF' // Couleur par défaut
+            color: getCategoryDefaultColor(name)
           };
+
+          // Calculer le pourcentage
+          const amountValue = Number(amount);
+          const percentage = data.totalExpenses ? (amountValue / data.totalExpenses) * 100 : 0;
 
           return {
             category: category,
-            amount: amount as number,
-            percentage: data.totalExpenses ? ((amount as number) / data.totalExpenses) * 100 : 0,
-            // Vous pouvez ajouter budget et status si vous avez ces données
+            amount: amountValue,
+            percentage: percentage,
+            // Autres propriétés si nécessaire
           };
         }),
 
-        // Vous devez récupérer les dépenses récentes séparément si elles ne sont pas
-        // incluses dans la réponse du backend
-        recentExpenses: [], // À remplir avec un autre appel API si nécessaire
+        // Utiliser les dépenses récentes du backend si disponibles
+        recentExpenses: data.recentExpenses || []
       };
 
-      console.log("Données transformées:", transformed);
+      // Si les dépenses récentes ne sont pas incluses, les récupérer séparément
+      if (!data.recentExpenses) {
+        try {
+          const recentResponse = await financeApi.getRecentExpenses(5);
+          transformed.recentExpenses = recentResponse.data;
+        } catch (error) {
+          console.error("Erreur lors de la récupération des dépenses récentes:", error);
+        }
+      }
 
       return transformed;
     } catch (error) {
@@ -234,6 +248,25 @@ export const useFinanceStore = defineStore('finance', () => {
     } finally {
       isLoading.value = false;
     }
+  };
+
+  // Fonction utilitaire pour obtenir une couleur par défaut pour une catégorie
+  const getCategoryDefaultColor = (categoryName: string): string => {
+    const colorMap: Record<string, string> = {
+      'Alimentation': '#3B82F6',
+      'Logement': '#8B5CF6',
+      'Transport': '#10B981',
+      'Santé': '#EF4444',
+      'Loisirs': '#EC4899',
+      'Restaurant': '#F97316',
+      'Technologie': '#6366F1',
+      'Personnel': '#14B8A6',
+      'Travail': '#4B5563',
+      'Factures': '#7C3AED',
+      'Autres': '#9CA3AF',
+    };
+
+    return colorMap[categoryName] || '#6B7280';
   };
 
   const getExpensesByCategory = async (categoryId: string, startDate: Date, endDate: Date) => {

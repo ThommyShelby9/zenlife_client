@@ -31,9 +31,23 @@ export const waterReminderApi = {
     return apiClient.post('/water/reset-history');
   },
 
-  // Exportation des données
-  exportData: () => {
-    return apiClient.get('/water/export', {
+  // Exportation des données en CSV
+  exportCSV: () => {
+    return apiClient.get('/water/export/csv', {
+      responseType: 'blob'
+    });
+  },
+
+  // Exportation des données en Excel
+  exportExcel: () => {
+    return apiClient.get('/water/export/excel', {
+      responseType: 'blob'
+    });
+  },
+
+  // Exportation des données en PDF
+  exportPDF: () => {
+    return apiClient.get('/water/export/pdf', {
       responseType: 'blob'
     });
   }

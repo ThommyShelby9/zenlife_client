@@ -1,5 +1,5 @@
 import apiClient from './index';
-import type { Expense, Budget, ExpenseCategory, ExpenseCategoryDTO, ExpenseDTO } from '@/types/finance';
+import type { Expense, Budget, ExpenseCategory, ExpenseCategoryDTO, ExpenseDTO, BudgetDTO } from '@/types/finance';
 import { format } from 'date-fns';
 
 export const financeApi = {
@@ -88,7 +88,17 @@ export const financeApi = {
    * Create or update a budget
    */
   createOrUpdateBudget: (budget: Budget) => {
-    return apiClient.post('/finance/budgets', budget);
+    // Conversion de Budget à BudgetDTO
+    const budgetDTO: BudgetDTO = {
+      id: budget.id,
+      categoryId: budget.categoryId || '',
+      amount: budget.amount,
+      yearMonth: budget.yearMonth,
+      notes: budget.notes,
+      alertThresholdPercentage: 80 // Valeur par défaut
+    };
+
+    return apiClient.post('/finance/budgets', budgetDTO);
   },
 
   /**
@@ -105,4 +115,8 @@ export const financeApi = {
     const yearMonth = format(date, 'yyyy-MM');
     return apiClient.get(`/finance/summary/${yearMonth}`);
   },
+
+  getRecentExpenses: (limit = 5) => {
+    return apiClient.get(`/finance/expenses/recent?limit=${limit}`);
+  }
 };

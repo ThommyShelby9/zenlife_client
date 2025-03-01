@@ -3,6 +3,22 @@
     <div class="mx-auto px-4 sm:px-6 md:px-8">
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Résumé financier</h1>
+        <div class="flex space-x-2">
+      <RouterLink
+        to="/finance/budget"
+        class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+      >
+        <CashIcon class="h-4 w-4 mr-1" />
+        Budget
+      </RouterLink>
+      <RouterLink
+        to="/finance/expense"
+        class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+      >
+        <ReceiptTaxIcon class="h-4 w-4 mr-1" />
+        Dépenses
+      </RouterLink>
+    </div>
         <div class="flex space-x-4">
           <div class="relative">
             <input

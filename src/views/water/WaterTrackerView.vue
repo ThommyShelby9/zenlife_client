@@ -334,11 +334,22 @@ const getGlassTypeLabel = (size: number): string => {
   return 'Grande quantité';
 };
 
-const formatTime = (timestamp: string): string => {
+const formatTime = (timestamp: string | number | Date) => {
+  if (!timestamp) {
+    return '--:--';
+  }
+
   try {
-    return format(new Date(timestamp), 'HH:mm');
+    const date = new Date(timestamp);
+    // Vérifier que la date est valide
+    if (isNaN(date.getTime())) {
+      console.warn('Date invalide:', timestamp);
+      return '--:--';
+    }
+    return format(date, 'HH:mm');
   } catch (error) {
-    return timestamp;
+    console.warn('Erreur de formatage de l\'heure:', error, timestamp);
+    return '--:--';
   }
 };
 
@@ -374,52 +385,153 @@ const addCustomIntake = async () => {
   customIntakeAmount.value = 250;
 };
 
-// Filter history to get only today's intakes
+// Remplacer complètement la fonction filterTodayIntakes dans WaterTrackerView.vue
 const filterTodayIntakes = () => {
-  const today = new Date().toISOString().split('T')[0];
+  console.log('Filtrage des entrées d\'aujourd\'hui...');
+  console.log('Historique brut:', JSON.stringify(waterStore.intakeHistory));
 
+  // Important: vérifier si l'historique est vide
+  if (!waterStore.intakeHistory || waterStore.intakeHistory.length === 0) {
+    console.log('Historique vide, rien à filtrer');
+    todayIntakeHistory.value = [];
+    return;
+  }
+
+  // Créer la date d'aujourd'hui à 00:00 local
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Extraire année, mois, jour de aujourd'hui
+  const todayYear = today.getFullYear();
+  const todayMonth = today.getMonth();
+  const todayDay = today.getDate();
+
+  console.log(`Date d'aujourd'hui: ${todayYear}-${todayMonth+1}-${todayDay}`);
+
+  // Filtrer l'historique en comparant directement les composants de date
   todayIntakeHistory.value = waterStore.intakeHistory
     .filter(intake => {
-      const intakeDate = new Date(intake.timestamp).toISOString().split('T')[0];
-      return intakeDate === today;
+      console.log('Évaluation de l\'entrée:', intake);
+
+      if (!intake || !intake.timestamp) {
+        console.warn('Entrée sans horodatage:', intake);
+        return false;
+      }
+
+      try {
+        // Créer un objet Date à partir du timestamp
+        const intakeDate = new Date(intake.timestamp);
+
+        // Vérifier si la date est valide
+        if (isNaN(intakeDate.getTime())) {
+          console.warn('Date invalide:', intake.timestamp);
+          return false;
+        }
+
+        // Extraire année, mois, jour de l'entrée
+        const intakeYear = intakeDate.getFullYear();
+        const intakeMonth = intakeDate.getMonth();
+        const intakeDay = intakeDate.getDate();
+
+        // Comparer année, mois, jour au lieu de comparer les chaînes
+        const isToday = intakeYear === todayYear &&
+                        intakeMonth === todayMonth &&
+                        intakeDay === todayDay;
+
+        console.log(`Entrée ${intake.id}: date=${intakeYear}-${intakeMonth+1}-${intakeDay}, estAujourdhui=${isToday}`);
+
+        return isToday;
+      } catch (error) {
+        console.error('Erreur de traitement de date pour l\'entrée:', intake, error);
+        return false;
+      }
     })
-    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    .sort((a, b) => {
+      try {
+        return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+      } catch (error) {
+        console.warn('Erreur de tri:', error);
+        return 0;
+      }
+    });
+
+  console.log('Historique filtré:', todayIntakeHistory.value);
+
+  // Si l'historique est vide mais qu'il y a une consommation aujourd'hui,
+  // peut-être que les timestamps ne sont pas au bon format.
+  // Essayons une approche alternative basée sur l'ID si applicable
+  if (todayIntakeHistory.value.length === 0 && todayIntake.value > 0) {
+    console.log('Historique vide mais consommation > 0, tentative de récupération par dernières entrées');
+    // Prendre les entrées les plus récentes (par ID ou ordre d'ajout)
+    const sortedIntakes = [...waterStore.intakeHistory].sort((a, b) => {
+      // Tenter de trier par ID (assumant que les IDs plus récents sont plus grands/après alphabétiquement)
+      return (b.id || '').localeCompare(a.id || '');
+    });
+
+    // Prendre jusqu'à 5 entrées les plus récentes pour aujourd'hui
+    todayIntakeHistory.value = sortedIntakes.slice(0, 5);
+    console.log('Historique récupéré par ID:', todayIntakeHistory.value);
+  }
 };
 
-
-// Generate weekly data for chart
 const generateWeeklyData = () => {
+  console.log('Génération des données hebdomadaires...');
+
   const days = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
   const today = new Date();
-  const dayOfWeek = today.getDay();
+  const currentDayOfWeek = today.getDay();
 
   // Initialiser avec des données vides typées
   const weekData: WeeklyWaterData[] = [];
 
+  // Créer la structure de la semaine
   for (let i = 0; i < 7; i++) {
     const dayDate = new Date(today);
-    dayDate.setDate(today.getDate() - dayOfWeek + i);
+    dayDate.setDate(today.getDate() - currentDayOfWeek + i);
+
+    // Format YYYY-MM-DD
+    const dateString = `${dayDate.getFullYear()}-${String(dayDate.getMonth() + 1).padStart(2, '0')}-${String(dayDate.getDate()).padStart(2, '0')}`;
 
     weekData.push({
       day: days[i],
-      date: dayDate.toISOString().split('T')[0],
+      date: dateString,
       intake: 0,
-      goal: waterSettings.value.dailyGoalML,
+      goal: waterSettings.value.dailyGoalML || 2000,
       percentage: 0
     });
   }
 
+  console.log('Structure hebdomadaire:', weekData);
+
   // Remplir avec les données réelles
   waterStore.intakeHistory.forEach(intake => {
-    const intakeDate = new Date(intake.timestamp).toISOString().split('T')[0];
-    const dayIndex = weekData.findIndex(day => day.date === intakeDate);
+    if (!intake || !intake.timestamp) {
+      console.warn('Entrée invalide dans l\'historique:', intake);
+      return;
+    }
 
-    if (dayIndex !== -1) {
-      weekData[dayIndex].intake += intake.quantityML;
-      weekData[dayIndex].percentage = (weekData[dayIndex].intake / weekData[dayIndex].goal) * 100;
+    try {
+      const intakeDate = new Date(intake.timestamp);
+      if (isNaN(intakeDate.getTime())) {
+        console.warn('Date invalide dans l\'historique:', intake.timestamp);
+        return;
+      }
+
+      const intakeDateString = `${intakeDate.getFullYear()}-${String(intakeDate.getMonth() + 1).padStart(2, '0')}-${String(intakeDate.getDate()).padStart(2, '0')}`;
+      const dayIndex = weekData.findIndex(day => day.date === intakeDateString);
+
+      if (dayIndex !== -1) {
+        weekData[dayIndex].intake += intake.quantityML;
+        const goal = weekData[dayIndex].goal || 2000; // Valeur par défaut si goal est 0
+        weekData[dayIndex].percentage = (weekData[dayIndex].intake / goal) * 100;
+        console.log(`Ajout à ${days[dayIndex]}: +${intake.quantityML}ml, total=${weekData[dayIndex].intake}ml, ${weekData[dayIndex].percentage.toFixed(1)}%`);
+      }
+    } catch (error) {
+      console.warn('Erreur lors du traitement de l\'entrée:', error, intake);
     }
   });
 
+  console.log('Données hebdomadaires générées:', weekData);
   weeklyData.value = weekData;
 };
 

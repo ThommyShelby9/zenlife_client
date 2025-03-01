@@ -100,11 +100,9 @@ class WebSocketService {
       console.log('WebSocket connection closed');
 
       if (this.reconnectAttempts < this.maxReconnectAttempts) {
-        toast.warning('Connexion perdue. Tentative de reconnexion...');
         this.reconnectAttempts++;
       } else {
-        toast.error('Impossible de se connecter au service de messages');
-      }
+        this.reconnectAttempts = 0;}
     };
 
     // Activate the client

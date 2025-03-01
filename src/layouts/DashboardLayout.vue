@@ -481,22 +481,73 @@ const getInitials = (name: string): string => {
 };
 
 // Format notification date
-const formatNotificationDate = (date: string) => {
-  try {
-    const notificationDate = new Date(date);
-    const now = new Date();
-    const diffInDays = Math.floor((now.getTime() - notificationDate.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (diffInDays < 1) {
-      return formatDistance(notificationDate, now, { addSuffix: true, locale: fr });
-    } else if (diffInDays < 7) {
-      return format(notificationDate, 'EEEE', { locale: fr });
-    } else {
-      return format(notificationDate, 'dd MMM yyyy', { locale: fr });
-    }
-  } catch (error) {
-    return date;
+// Fonction améliorée pour formater les dates de notification
+const formatNotificationDate = (dateString: string | number | Date) => {
+  if (!dateString) {
+    console.warn('Date de notification manquante');
+    return 'Date inconnue';
   }
+
+  try {
+    // Tenter de créer un objet Date
+    const date = new Date(dateString);
+
+    // Vérifier si la date est valide
+    if (isNaN(date.getTime())) {
+      console.warn('Date de notification invalide:', dateString);
+      return 'Date invalide';
+    }
+
+    // Vérifier si la date est proche de l'époque Unix (problème potentiel)
+    if (date.getFullYear() < 2000) {
+      console.warn('Date de notification suspecte (avant 2000):', dateString);
+      // Utiliser la date actuelle comme fallback
+      return formatRelativeTime(new Date());
+    }
+
+    // Formater la date en fonction de son ancienneté
+    return formatRelativeTime(date);
+  } catch (error) {
+    console.error('Erreur lors du formatage de la date de notification:', error);
+    return 'Date invalide';
+  }
+};
+// Formater la date en temps relatif ou absolu selon l'ancienneté
+const formatRelativeTime = (date: Date) => {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSeconds = Math.floor(diffMs / 1000);
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  // Moins d'une minute
+  if (diffMinutes < 1) {
+    return 'À l\'instant';
+  }
+
+  // Moins d'une heure
+  if (diffMinutes < 60) {
+    return `Il y a ${diffMinutes} ${diffMinutes === 1 ? 'minute' : 'minutes'}`;
+  }
+
+  // Moins d'un jour
+  if (diffHours < 24) {
+    return `Il y a ${diffHours} ${diffHours === 1 ? 'heure' : 'heures'}`;
+  }
+
+  // Moins d'une semaine
+  if (diffDays < 7) {
+    return `Il y a ${diffDays} ${diffDays === 1 ? 'jour' : 'jours'}`;
+  }
+
+  // Plus d'une semaine : afficher la date complète
+  const options: Intl.DateTimeFormatOptions = {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  };
+  return date.toLocaleDateString('fr-FR', options);
 };
 
 // Get notification icon based on type

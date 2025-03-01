@@ -2,7 +2,16 @@
   <DashboardLayout>
     <div class="mx-auto px-4 sm:px-6 md:px-8">
       <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Gestion des dépenses</h1>
+        <div class="flex items-center space-x-4">
+          <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Gestion des dépenses</h1>
+          <RouterLink
+            to="/finance/summary"
+            class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          >
+            <ChartBarIcon class="h-4 w-4 mr-1" />
+            Historique financier
+          </RouterLink>
+        </div>
         <button
           @click="openCreateModal"
           class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
@@ -10,6 +19,17 @@
           <PlusIcon class="h-4 w-4 mr-2" />
           Ajouter une dépense
         </button>
+      </div>
+
+      <!-- Bouton retour vers Budget mensuel -->
+      <div class="mt-4">
+        <RouterLink
+          to="/finance/budget"
+          class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+        >
+          <ArrowLeftIcon class="h-4 w-4 mr-1" />
+          Retour au budget mensuel
+        </RouterLink>
       </div>
 
       <!-- Filters and controls -->
@@ -23,7 +43,7 @@
                 type="date"
                 id="start-date"
                 v-model="filters.startDate"
-                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white input-larger"
               />
             </div>
             <div>
@@ -32,7 +52,7 @@
                 type="date"
                 id="end-date"
                 v-model="filters.endDate"
-                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white input-larger"
               />
             </div>
           </div>
@@ -43,7 +63,7 @@
             <select
               id="category"
               v-model="filters.categoryId"
-              class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+              class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white input-larger"
             >
               <option value="">Toutes les catégories</option>
               <option v-for="category in categories" :key="category.id" :value="category.id">
@@ -60,7 +80,7 @@
                 type="text"
                 id="search"
                 v-model="filters.search"
-                class="block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white pr-10"
+                class="block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white pr-10 input-larger"
                 placeholder="Rechercher..."
               />
               <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -102,8 +122,8 @@
           <li v-for="expense in expenses" :key="expense.id" class="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" @click="openExpenseDetails(expense)">
             <div class="flex items-center justify-between">
               <div class="flex items-center">
-                <div class="flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center" :style="{ backgroundColor: expense.category.color || '#4B5563' }">
-                  <component :is="getCategoryIcon(expense.category.name)" class="h-5 w-5 text-white" />
+                <div class="flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center" :style="{ backgroundColor: expense.category?.color || '#4B5563' }">
+                  <component :is="getCategoryIcon(expense.category?.name)" class="h-5 w-5 text-white" />
                 </div>
                 <div class="ml-4">
                   <div class="text-sm font-medium text-gray-900 dark:text-white">{{ expense.title }}</div>
@@ -115,7 +135,7 @@
                   {{ formatCurrency(expense.amount) }}
                 </div>
                 <div class="text-xs text-gray-500 dark:text-gray-400 text-right">
-                  {{ expense.category.name }}
+                  {{ expense.category?.name }}
                 </div>
               </div>
             </div>
@@ -241,25 +261,25 @@
                       id="expense-title"
                       v-model="expenseForm.title"
                       type="text"
-                      class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                      class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white input-larger"
                       placeholder="Titre de la dépense"
                     />
                   </div>
 
                   <div>
                     <label for="expense-amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Montant (en euros)
+                      Montant (en {{ getCurrencySymbol() }})
                     </label>
                     <div class="mt-1 relative rounded-md shadow-sm">
                       <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span class="text-gray-500 dark:text-gray-400 sm:text-sm">€</span>
+                        <span class="text-gray-500 dark:text-gray-400 sm:text-sm">{{ getCurrencySymbol() }}</span>
                       </div>
                       <input
                         id="expense-amount"
                         v-model="expenseForm.amount"
                         type="number"
                         step="0.01"
-                        class="pl-7 block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                        class="pl-7 block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white input-larger"
                         placeholder="0.00"
                       />
                     </div>
@@ -272,7 +292,7 @@
                     <select
                       id="expense-category"
                       v-model="expenseForm.categoryId"
-                      class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                      class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white input-larger"
                     >
                       <option value="">Sélectionner une catégorie</option>
                       <option v-for="category in categories" :key="category.id" :value="category.id">
@@ -289,7 +309,7 @@
                       id="expense-date"
                       v-model="expenseForm.date"
                       type="date"
-                      class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                      class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white input-larger"
                     />
                   </div>
 
@@ -301,7 +321,7 @@
                       id="expense-notes"
                       v-model="expenseForm.notes"
                       rows="3"
-                      class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                      class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white input-larger"
                       placeholder="Notes optionnelles"
                     ></textarea>
                   </div>
@@ -381,8 +401,8 @@
                 </DialogTitle>
                 <div v-if="selectedExpense" class="mt-4">
                   <div class="flex items-center mb-4">
-                    <div class="flex-shrink-0 h-12 w-12 rounded-full flex items-center justify-center" :style="{ backgroundColor: selectedExpense.category.color || '#4B5563' }">
-                      <component :is="getCategoryIcon(selectedExpense.category.name)" class="h-6 w-6 text-white" />
+                    <div class="flex-shrink-0 h-12 w-12 rounded-full flex items-center justify-center" :style="{ backgroundColor: selectedExpense.category?.color || '#4B5563' }">
+                      <component :is="getCategoryIcon(selectedExpense.category?.name)" class="h-6 w-6 text-white" />
                     </div>
                     <div class="ml-4">
                       <h4 class="text-xl font-semibold text-gray-900 dark:text-white">
@@ -407,13 +427,13 @@
                       <div class="sm:col-span-1">
                         <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Catégorie</dt>
                         <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                          {{ selectedExpense.category.name }}
+                          {{ selectedExpense.category?.name }}
                         </dd>
                       </div>
                       <div class="sm:col-span-2">
                         <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Notes</dt>
                         <dd class="mt-1 text-sm text-gray-900 dark:text-white whitespace-pre-line">
-                          {{ selectedExpense.notes || 'Aucune note' }}
+                          {{ selectedExpense.description || 'Aucune note' }}
                         </dd>
                       </div>
                     </dl>
@@ -448,6 +468,7 @@
 <script lang="ts" setup>
 import { ref, reactive, computed, onMounted, watchEffect } from 'vue';
 import { useToast } from 'vue-toastification';
+import { RouterLink } from 'vue-router';
 import {
   Dialog,
   DialogPanel,
@@ -476,6 +497,8 @@ import {
   OfficeBuildingIcon,
   ScaleIcon,
   SparklesIcon,
+  ArrowLeftIcon,
+  ChartBarIcon,
 } from '@heroicons/vue/outline';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 import { useFinanceStore } from '@/stores/finance';
@@ -540,7 +563,7 @@ const expenseForm = ref({
 // Computed properties
 const isValidExpense = computed(() => {
   return (
-    expenseForm.value.title.trim() !== '' &&
+    expenseForm.value.title && expenseForm.value.title.trim() !== '' &&
     expenseForm.value.amount !== 0 &&
     expenseForm.value.categoryId !== '' &&
     expenseForm.value.date !== ''
@@ -551,11 +574,11 @@ const isValidExpense = computed(() => {
 const loadExpenses = async () => {
   isLoading.value = true;
   try {
-    // Utiliser fetchExpenses au lieu d'appeler expenses comme une fonction
     const response = await financeStore.fetchExpensesByDateRange(
       filters.startDate ? new Date(filters.startDate) : new Date(new Date().getFullYear(), 0, 1),
       filters.endDate ? new Date(filters.endDate) : new Date()
     );
+
     console.log(response)
 
     // Filtrer les résultats côté client si nécessaire
@@ -563,14 +586,14 @@ const loadExpenses = async () => {
 
     if (filters.search) {
       filteredExpenses = filteredExpenses.filter((exp: { title: string; description: string; }) =>
-        exp.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-        exp.description?.toLowerCase().includes(filters.search.toLowerCase())
+        (exp.title && exp.title.toLowerCase().includes(filters.search.toLowerCase())) ||
+        (exp.description && exp.description.toLowerCase().includes(filters.search.toLowerCase()))
       );
     }
 
     if (filters.categoryId) {
       filteredExpenses = filteredExpenses.filter((exp: { category: { id: string; }; }) =>
-        exp.category.id === filters.categoryId
+        exp.category && exp.category.id === filters.categoryId
       );
     }
 
@@ -584,10 +607,20 @@ const loadExpenses = async () => {
   }
 };
 
+// Obtenir le symbole de la devise
+const getCurrencySymbol = () => {
+  const currency = financeStore.currencyPreference || 'EUR';
+  switch(currency) {
+    case 'USD': return '$';
+    case 'XOF': return 'FCFA';
+    case 'EUR':
+    default: return '€';
+  }
+};
+
 // Pour loadCategories
 const loadCategories = async () => {
   try {
-    // Utiliser fetchCategories au lieu d'appeler categories comme une fonction
     categories.value = await financeStore.fetchCategories();
   } catch (error) {
     console.error('Error loading categories:', error);
@@ -628,7 +661,9 @@ const goToPage = (page: number) => {
   loadExpenses();
 };
 
-const getCategoryIcon = (categoryName: string) => {
+const getCategoryIcon = (categoryName?: string) => {
+  if (!categoryName) return SparklesIcon;
+
   const iconMap: Record<string, any> = {
     'Alimentation': ShoppingBagIcon,
     'Logement': HomeIcon,
@@ -669,11 +704,11 @@ const editSelectedExpense = () => {
   if (selectedExpense.value) {
     editingExpense.value = selectedExpense.value;
     expenseForm.value = {
-      title: selectedExpense.value.title,
-      amount: selectedExpense.value.amount,
-      categoryId: selectedExpense.value.category.id || '',
+      title: selectedExpense.value.title || '',
+      amount: selectedExpense.value.amount || 0,
+      categoryId: selectedExpense.value.category?.id || '',
       date: formatDate(new Date(selectedExpense.value.date)),
-      notes: selectedExpense.value.notes || '',
+      notes: selectedExpense.value.description || '',
     };
     showDetailsModal.value = false;
     showExpenseModal.value = true;
@@ -694,18 +729,23 @@ const saveExpense = async () => {
     // IMPORTANT: Formater la date au format ISO YYYY-MM-DD
     const isoFormattedDate = format(new Date(expenseForm.value.date), 'yyyy-MM-dd');
 
-    // Créer l'objet expense avec la date correctement formatée
-// Créer l'objet expense avec la date correctement formatée
-const expenseData = {
-  title: expenseForm.value.title,
-  amount: expenseForm.value.amount,
-  date: isoFormattedDate,
-  category: selectedCategory, // Utiliser l'objet complet de catégorie
-  description: expenseForm.value.notes
-};
+    // Créer l'objet expense avec la structure attendue par l'API
+    const expenseData = {
+      title: expenseForm.value.title,
+      amount: expenseForm.value.amount,
+      date: isoFormattedDate,
+      // Utiliser l'objet category avec toutes les propriétés nécessaires
+      category: {
+        id: selectedCategory.id,
+        name: selectedCategory.name,
+        color: selectedCategory.color || '',
+        icon: selectedCategory.icon || ''
+      },
+      description: expenseForm.value.notes // Utiliser notes comme description
+    };
 
-    if (editingExpense.value) {
-      await financeStore.updateExpense(editingExpense.value.id!, expenseData);
+    if (editingExpense.value && editingExpense.value.id) {
+      await financeStore.updateExpense(editingExpense.value.id, expenseData);
       toast.success('Dépense mise à jour avec succès');
     } else {
       await financeStore.createExpense(expenseData);
@@ -723,7 +763,7 @@ const expenseData = {
 };
 
 const deleteExpense = async () => {
-  if (!editingExpense.value || isSaving.value) return;
+  if (!editingExpense.value || !editingExpense.value.id || isSaving.value) return;
 
   if (!confirm('Êtes-vous sûr de vouloir supprimer cette dépense ?')) {
     return;
@@ -731,7 +771,7 @@ const deleteExpense = async () => {
 
   isSaving.value = true;
   try {
-    await financeStore.deleteExpense(editingExpense.value.id!);
+    await financeStore.deleteExpense(editingExpense.value.id);
     toast.success('Dépense supprimée avec succès');
     showExpenseModal.value = false;
     loadExpenses();
@@ -748,3 +788,26 @@ onMounted(async () => {
   await Promise.all([loadCategories(), loadExpenses()]);
 });
 </script>
+
+<style>
+/* Augmentation de la taille des champs input */
+.input-larger {
+  min-height: 2.75rem !important;
+  padding: 0.625rem 0.75rem !important;
+}
+
+/* Taille minimale pour les boutons */
+button {
+  min-height: 2.5rem;
+}
+
+/* Style hoverable pour les éléments de liste */
+.list-item-hover {
+  transition: all 0.2s ease;
+}
+
+.list-item-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+</style>

@@ -1,12 +1,13 @@
 export interface WaterReminderSetting {
+  enabled?: any; // Gardez cette ligne pour la compatibilité
   id?: string;
   userId?: string;
   dailyGoalML: number;
-  reminderEnabled: boolean;
+  reminderEnabled: boolean; // Conservez cette ligne
   reminderInterval: number;
   startTime: string;
   endTime: string;
-  customGlassSizes?: number[]; // Ajout de cette propriété
+  customGlassSizes?: number[];
   createdAt?: string;
   updatedAt?: string;
 }
