@@ -273,7 +273,7 @@ const addTask = async (plannerDate: Date, task: PlannerTask): Promise<PlannerTas
     const dateKey = format(plannerDate, 'yyyy-MM-dd');
 
     // Récupérer ou créer un planificateur
-    let planner = planners.value[dateKey] || {
+    const planner = planners.value[dateKey] || {
       date: dateKey,
       tasks: [],
       reflection: '', // Chaîne vide comme valeur par défaut

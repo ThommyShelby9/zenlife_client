@@ -356,7 +356,7 @@
 <script lang="ts" setup>
 import { ref, computed, reactive, onMounted } from 'vue';
 import { useToast } from 'vue-toastification';
-import { format, parseISO, isToday, isYesterday, addDays, differenceInDays } from 'date-fns';
+import { format, parseISO, isToday, isYesterday, addDays} from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
   SearchIcon,
@@ -393,7 +393,7 @@ const visiblePages = computed(() => {
   const maxVisiblePages = 5;
 
   let startPage = Math.max(1, currentPage.value - Math.floor(maxVisiblePages / 2));
-  let endPage = Math.min(totalPages.value, startPage + maxVisiblePages - 1);
+  const endPage = Math.min(totalPages.value, startPage + maxVisiblePages - 1);
 
   if (endPage - startPage + 1 < maxVisiblePages) {
     startPage = Math.max(1, endPage - maxVisiblePages + 1);
@@ -497,6 +497,7 @@ const formatDayHeader = (dateString: string): string => {
     } else {
       return format(date, 'EEEE d MMMM yyyy', { locale: fr });
     }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     return dateString;
   }

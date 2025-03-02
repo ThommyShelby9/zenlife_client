@@ -179,7 +179,7 @@
         </button>
         <div class="flex-1 px-4 flex justify-between">
           <div class="flex-1 flex">
-            <form class="w-full flex md:ml-0" action="#" method="GET">
+<!--             <form class="w-full flex md:ml-0" action="#" method="GET">
               <label for="search-field" class="sr-only">Rechercher</label>
               <div class="relative w-full text-gray-400 focus-within:text-gray-600 dark:focus-within:text-gray-300">
                 <div class="absolute inset-y-0 left-0 flex items-center pointer-events-none">
@@ -193,7 +193,7 @@
                   name="search"
                 />
               </div>
-            </form>
+            </form> -->
           </div>
           <div class="ml-4 flex items-center md:ml-6">
             <!-- Theme toggle -->
@@ -370,7 +370,6 @@ import {
   MenuIcon,
   UsersIcon,
   XIcon,
-  SearchIcon,
   MoonIcon,
   SunIcon,
   ChatAlt2Icon,
