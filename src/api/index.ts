@@ -15,10 +15,12 @@ const apiClient = axios.create({
 });
 
 // Compteur pour les tentatives de requête
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let failedQueue: any[] = [];
 let isRefreshing = false;
 
 // Fonction pour traiter la file d'attente des requêtes échouées
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const processQueue = (error: AxiosError | null, token: string | null = null) => {
   failedQueue.forEach(prom => {
     if (error) {
