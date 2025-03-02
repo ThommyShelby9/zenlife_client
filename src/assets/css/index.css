@@ -39,6 +39,27 @@
   ::selection {
     @apply bg-primary-100 text-primary-900 dark:bg-primary-800 dark:text-primary-100;
   }
+
+  img {
+    @apply object-cover;
+  }
+  
+  /* Exceptions pour certains types d'images si nécessaire */
+  img.object-contain {
+    @apply object-contain;
+  }
+  
+  img.object-fill {
+    @apply object-fill;
+  }
+  
+  img.object-none {
+    @apply object-none;
+  }
+  
+  img.object-scale-down {
+    @apply object-scale-down;
+  }
 }
 
 @layer components {

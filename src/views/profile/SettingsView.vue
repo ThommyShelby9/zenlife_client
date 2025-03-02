@@ -2,6 +2,15 @@
   <DashboardLayout>
     <div class="mx-auto px-4 sm:px-6 md:px-8">
       <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Paramètres</h1>
+      <div class="mt-4">
+        <RouterLink
+          to="/profile"
+          class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+        >
+          <ArrowLeftIcon class="h-4 w-4 mr-1" />
+          Retour au profil
+        </RouterLink>
+      </div>
 
       <!-- Loading indicator -->
       <div v-if="isLoading" class="mt-8 flex justify-center">
@@ -99,9 +108,16 @@
                     </select>
                   </div>
 
-                  <div class="form-group">
-  <label for="currency">Devise</label>
-  <select v-model="selectedCurrency" @change="updateCurrency" class="form-control">
+                  <div>
+  <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">Devise</h3>
+  <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+    Choisissez votre devise préférée pour le suivi financier.
+  </p>
+  <select
+    v-model="selectedCurrency"
+    @change="updateCurrency"
+    class="mt-3 block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+  >
     <option value="EUR">Euro (€)</option>
     <option value="USD">Dollar américain ($)</option>
     <option value="XOF">Franc CFA (FCFA)</option>

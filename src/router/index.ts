@@ -22,12 +22,14 @@ const FriendRequestsView = () => import('@/views/social/FriendRequestsView.vue')
 const ChatView = () => import('@/views/chat/ChatView.vue');
 const ConversationView = () => import('@/views/chat/ConversationView.vue');
 import VerifyEmailView from '@/views/auth/VerifyEmailView.vue'; // Import de la nouvelle vue
+import Landing from '@/views/landing/Landing.vue';
 
 
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
-    redirect: '/dashboard',
+    name: 'Landing',
+    component: Landing
   },
   {
     path: '/auth',

@@ -395,8 +395,14 @@ import { formatDate } from '@/utils/formatters';
 import { fileApi } from '@/api/file';
 import { authApi } from '@/api/auth';
 import type { User } from '@/types/auth';
+import { usePlannerStore } from '@/stores/planner';
+import { useFinanceStore } from '@/stores/finance';
+import { useSocialStore } from '@/stores/social';
 
-// Stores and composables
+// Initialisation des stores
+const plannerStore = usePlannerStore();
+const financeStore = useFinanceStore();
+const socialStore = useSocialStore();
 const userStore = useUserStore();
 const authStore = useAuthStore();
 const toast = useToast();
@@ -422,11 +428,25 @@ const passwordForm = ref({
   confirmPassword: '',
 });
 
+const plannerStats = ref<{
+  totalTasks: number;
+  completedTasks: number;
+  completionRate: number;
+  highPriorityCompletion: number;
+  averageMood?: number;
+  weeklyCompletion: { day: string; rate: number }[];
+} | null>(null);
+
+const budgetStats = ref<number>(0);
+
+
 // Stats
-const stats = ref({
-  completedTasks: 0,
-  budgetsInRange: 0,
-  friendsCount: 0,
+const stats = computed(() => {
+  return {
+    completedTasks: plannerStats.value?.completedTasks || 0,
+    budgetsInRange: budgetStats.value,
+    friendsCount: socialStore.friends.length
+  };
 });
 
 // Computed properties
@@ -558,17 +578,77 @@ const changePassword = async () => {
   }
 };
 
+const calculateBudgetComplianceRate = async () => {
+  try {
+    // Récupérer les budgets des 6 derniers mois
+    const now = new Date();
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(now.getMonth() - 6);
+
+    // Récupérer les dépenses par plage de date
+    const expenses = await financeStore.fetchExpensesByDateRange(sixMonthsAgo, now);
+
+    // Organiser les dépenses par mois
+    const expensesByMonth: Record<string, number> = {};
+    expenses.forEach((expense: any) => {
+      const date = new Date(expense.date);
+      const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+      if (!expensesByMonth[yearMonth]) {
+        expensesByMonth[yearMonth] = 0;
+      }
+      expensesByMonth[yearMonth] += expense.amount;
+    });
+
+    // Pour chaque mois de la période, récupérer les budgets
+    let budgetsRespected = 0;
+    let totalBudgets = 0;
+
+    for (let i = 0; i < 6; i++) {
+      const date = new Date();
+      date.setMonth(now.getMonth() - i);
+
+      // Récupérer les budgets pour ce mois
+      const monthlyBudgets = await financeStore.fetchBudgets(date);
+
+      const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const monthlyExpenses = expensesByMonth[yearMonth] || 0;
+
+      // Vérifier si le total des dépenses est inférieur au budget total
+      const totalBudget = monthlyBudgets.reduce((sum: number, budget: any) => sum + budget.amount, 0);
+
+      if (totalBudget > 0) {
+        totalBudgets++;
+        if (monthlyExpenses <= totalBudget) {
+          budgetsRespected++;
+        }
+      }
+    }
+
+    // Calculer le pourcentage
+    return totalBudgets > 0 ? Math.round((budgetsRespected / totalBudgets) * 100) : 0;
+  } catch (error) {
+    console.error('Erreur lors du calcul du taux de respect des budgets:', error);
+    return 0;
+  }
+};
+
 const fetchUserStats = async () => {
   try {
-    // These would be API calls in a real application
-    // For now, we'll use dummy data
-    stats.value = {
-      completedTasks: 42,
-      budgetsInRange: 85,
-      friendsCount: 12,
-    };
+    // Utiliser la méthode getStats du PlannerStore pour obtenir les statistiques des tâches
+    plannerStats.value = await plannerStore.getStats();
+
+    // Calculer le taux de respect des budgets
+    budgetStats.value = await calculateBudgetComplianceRate();
+
+    // Vérifier si nous avons déjà les amis; sinon, les récupérer
+    if (socialStore.friends.length === 0) {
+      await socialStore.getFriends();
+    }
+
   } catch (error) {
-    console.error('Error fetching user stats:', error);
+    console.error('Erreur lors de la récupération des statistiques utilisateur:', error);
+    toast.error('Erreur lors du chargement des statistiques');
   }
 };
 
