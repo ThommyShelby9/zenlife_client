@@ -466,7 +466,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, computed, onMounted, watchEffect } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { useToast } from 'vue-toastification';
 import { RouterLink } from 'vue-router';
 import {
@@ -530,7 +530,7 @@ const visiblePages = computed(() => {
   const maxVisiblePages = 5;
 
   let startPage = Math.max(1, currentPage.value - Math.floor(maxVisiblePages / 2));
-  let endPage = Math.min(totalPages.value, startPage + maxVisiblePages - 1);
+  const endPage = Math.min(totalPages.value, startPage + maxVisiblePages - 1);
 
   if (endPage - startPage + 1 < maxVisiblePages) {
     startPage = Math.max(1, endPage - maxVisiblePages + 1);
@@ -664,6 +664,7 @@ const goToPage = (page: number) => {
 const getCategoryIcon = (categoryName?: string) => {
   if (!categoryName) return SparklesIcon;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const iconMap: Record<string, any> = {
     'Alimentation': ShoppingBagIcon,
     'Logement': HomeIcon,

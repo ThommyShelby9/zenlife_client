@@ -19,11 +19,12 @@
             <div class="md:w-1/3 p-6 flex flex-col items-center border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700">
               <div class="relative group">
                 <img
-                  v-if="user.profilePictureUrl"
-                  :src="user.profilePictureUrl"
-                  alt="Profile picture"
-                  class="h-32 w-32 rounded-full object-cover"
-                />
+  v-if="user?.profilePictureUrl"
+  :src="getFullImageUrl(user.profilePictureUrl)"
+  alt="Photo de profil"
+  class="inline-block h-32 w-32 rounded-full object-cover"
+  @error="handleImageError"
+/>
                 <div
                   v-else
                   class="h-32 w-32 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center"
@@ -43,7 +44,7 @@
                 {{ user.fullName }}
               </h2>
               <p class="text-sm text-gray-500 dark:text-gray-400">
-                @{{ user.username }}
+                @{{ user.userDisplayName }}
               </p>
               <div class="mt-6 flex flex-col w-full space-y-2">
                 <RouterLink
@@ -72,7 +73,8 @@
                   </div>
                   <div class="py-3 flex justify-between">
                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Nom d'utilisateur</dt>
-                    <dd class="text-sm text-gray-900 dark:text-white">{{ user.username }}</dd>
+                    <dd class="text-sm text-gray-900 dark:text-white">                @{{ user.userDisplayName }}
+                    </dd>
                   </div>
                   <div class="py-3 flex justify-between">
                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Email</dt>
@@ -226,7 +228,8 @@
                       </span>
                       <input
                         id="username"
-                        v-model="profileForm.username"
+                        v-model="profileForm.userDisplayName
+"
                         type="text"
                         class="flex-1 block w-full rounded-none rounded-r-md border-gray-300 dark:border-gray-700 focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
                       />
@@ -398,7 +401,6 @@ import type { User } from '@/types/auth';
 import { usePlannerStore } from '@/stores/planner';
 import { useFinanceStore } from '@/stores/finance';
 import { useSocialStore } from '@/stores/social';
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
 
 
 // Initialisation des stores
@@ -420,7 +422,7 @@ const passwordError = ref('');
 // Forms
 const profileForm = ref({
   fullName: '',
-  username: '',
+  userDisplayName: '',
 });
 
 const passwordForm = ref({
@@ -504,7 +506,7 @@ const updateProfile = async () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const updatedUser = await userStore.updateProfile({
       fullName: profileForm.value.fullName,
-      username: profileForm.value.username,
+      username: profileForm.value.userDisplayName,
     });
 
     // Close modal
@@ -636,6 +638,25 @@ const calculateBudgetComplianceRate = async () => {
     return 0;
   }
 };
+const imageError = ref(false); // Ajoutez cette ligne pour déclarer la variable manquante
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const getFullImageUrl = (url: string): string => {
+  // Si l'URL commence déjà par http, la retourner telle quelle
+  if (url.startsWith('http')) {
+    return url;
+  }
+
+  // Sinon, préfixer avec l'URL de l'API
+  return `${import.meta.env.VITE_APP_API_URL.replace(/\/api$/, '')}${url}`;
+};
+
+// Gérer l'erreur de chargement d'image
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const handleImageError = () => {
+  imageError.value = true;
+  console.error("Erreur de chargement de l'image de profil");
+};
 
 const fetchUserStats = async () => {
   try {
@@ -661,13 +682,14 @@ onMounted(async () => {
     // Fetch current user if not already loaded
     if (!userStore.user) {
       await userStore.fetchCurrentUser();
+
     }
 
     // Initialize profile form
     if (userStore.user) {
       profileForm.value = {
         fullName: userStore.user.fullName,
-        username: userStore.user.username,
+        userDisplayName: userStore.user.userDisplayName,
       };
     }
 
@@ -682,3 +704,28 @@ onMounted(async () => {
 });
 
 </script>
+
+<style>
+/* Augmentation de la taille des champs input */
+input, select, textarea {
+  min-height: 2.75rem !important; /* Hauteur minimale augmentée */
+  padding: 0.625rem 0.75rem !important; /* Padding augmenté */
+}
+
+/* Style pour les cartes de budget */
+.budget-card {
+  transition: all 0.3s ease;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.budget-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Taille minimale pour les boutons */
+button {
+  min-height: 2.5rem;
+}
+</style>

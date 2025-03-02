@@ -34,6 +34,7 @@ export interface AuthResponse {
 // Dans @/types/auth.ts, étendez l'interface User
 
 export interface User {
+  userDisplayName: any;
   id: string;
   fullName: string;
   firstName?: string;  // Ajouté pour correspondre au backend

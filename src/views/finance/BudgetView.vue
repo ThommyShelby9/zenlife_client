@@ -764,6 +764,7 @@ const getCurrencySymbol = () => {
 
 // Obtenir l'icône d'une catégorie
 const getCategoryIcon = (categoryName: string) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const iconMap: Record<string, any> = {
     'Alimentation': ShoppingBagIcon,
     'Logement': HomeIcon,
@@ -1023,6 +1024,7 @@ const saveBudget = async () => {
 
     showBudgetModal.value = false;
     loadBudgets();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('Error saving budget:', error);
     toast.error(error.response?.data?.error || 'Erreur lors de l\'enregistrement du budget');

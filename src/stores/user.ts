@@ -2,7 +2,6 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import type { User } from '@/types/auth';
 import { userApi } from '@/api/user';
-import { fileApi } from '@/api/file';
 
 export const useUserStore = defineStore('user', () => {
   // State
@@ -15,6 +14,7 @@ export const useUserStore = defineStore('user', () => {
     try {
       const response = await userApi.getCurrentUser();
       user.value = response.data;
+      console.log('Current user:', user.value);
       return user.value;
     } catch (error) {
       console.error('Error fetching current user:', error);
