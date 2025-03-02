@@ -1,5 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import apiClient from './index';
-import type { PositiveThought, UserPositiveThoughtSetting } from '@/types/positiveThought';
 
 // Conversion du format des paramètres frontend vers backend
 const convertirParametresVersBackend = (parametres: { frequency: string; customInterval: number; preferredCategories: any[]; id: any; enabled: any; notificationEnabled: any; displayOnLockScreen: any; }) => {

@@ -1,8 +1,7 @@
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import type { PositiveThought, UserPositiveThoughtSetting } from '@/types/positiveThought';
 import { positiveThoughtApi } from '@/api/positiveThought';
-import { useNotificationStore } from '@/stores/notification';
 import { useToast } from 'vue-toastification';
 
 export const usePositiveThoughtStore = defineStore('positiveThought', () => {
@@ -14,7 +13,6 @@ export const usePositiveThoughtStore = defineStore('positiveThought', () => {
   const isLoading = ref<boolean>(false);
 
   // Services
-  const notificationStore = useNotificationStore();
   const toast = useToast();
 
   // Actions

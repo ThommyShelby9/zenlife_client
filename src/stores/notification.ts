@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import type { Notification, NotificationPayload } from '@/types/notification';
 import { useToast } from 'vue-toastification';
 import { notificationApi } from '@/api/notification';
 import websocketService from '@/services/websocketService';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import router from '@/router';
 import { useSocialStore } from './social';
 

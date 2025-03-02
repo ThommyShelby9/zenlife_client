@@ -1,5 +1,5 @@
 import apiClient from './index';
-import type { Expense, Budget, ExpenseCategory, ExpenseCategoryDTO, ExpenseDTO, BudgetDTO } from '@/types/finance';
+import type { Expense, Budget, ExpenseCategory, ExpenseDTO, BudgetDTO } from '@/types/finance';
 import { format } from 'date-fns';
 
 export const financeApi = {

@@ -1,5 +1,5 @@
 import apiClient from './index';
-import type { RegisterPayload, LoginPayload, ForgotPasswordPayload, ResetPasswordPayload, ChangePasswordPayload } from '@/types/auth';
+import type { RegisterPayload, LoginPayload, ForgotPasswordPayload, ChangePasswordPayload } from '@/types/auth';
 
 export const authApi = {
   /**

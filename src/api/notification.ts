@@ -1,5 +1,5 @@
 import apiClient from './index';
-import type { Notification, NotificationPayload } from '@/types/notification';
+import type { NotificationPayload } from '@/types/notification';
 
 export const notificationApi = {
   /**

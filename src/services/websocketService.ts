@@ -1,9 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Client, type IFrame, type IStompSocket } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { useUserStore } from '@/stores/user';
 import { useChatStore } from '@/stores/chat';
 import { useNotificationStore } from '@/stores/notification';
-import { useToast } from 'vue-toastification';
 
 class WebSocketService {
   private client: Client | null = null;
@@ -30,7 +30,6 @@ class WebSocketService {
    */
   public init(): void {
     const userStore = useUserStore();
-    const toast = useToast();
 
     if (!userStore.user || !userStore.user.id) {
       console.error('User not authenticated. Cannot initialize WebSocket.');
@@ -71,7 +70,7 @@ class WebSocketService {
     };
 
     // On connect
-    this.client.onConnect = (frame: IFrame) => {
+    this.client.onConnect = () => {
       this.connected = true;
       this.reconnectAttempts = 0;
       console.log('Connected to WebSocket');
