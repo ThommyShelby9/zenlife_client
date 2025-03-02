@@ -58,11 +58,12 @@
             <div class="flex items-center">
               <div class="flex-shrink-0">
                 <img
-                  v-if="friend.profilePictureUrl"
-                  :src="friend.profilePictureUrl"
-                  alt="Profile"
-                  class="h-12 w-12 rounded-full"
-                />
+      v-if="friend?.profilePictureUrl"
+      :src="getFullImageUrl(friend.profilePictureUrl)"
+      alt="Photo de profil"
+      class="inline-block h-12 w-12 rounded-full"
+      @error="handleImageError"
+    />
                 <div
                   v-else
                   class="h-12 w-12 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center"
@@ -502,6 +503,7 @@ const loadFriends = async () => {
 
     // Load friend requests count
     const requests = await socialStore.getFriendRequests();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     friendRequestsCount.value = requests.filter((req: { status: string; isOutgoing: any; }) => req.status === 'pending' && !req.isOutgoing).length;
   } catch (error) {
     console.error('Error loading friends:', error);
@@ -543,6 +545,7 @@ const removeFriend = async () => {
     await socialStore.removeFriend(selectedFriend.value.id);
 
     // Update friends list
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     friends.value = friends.value.filter((friend: { id: any; }) => friend.id !== selectedFriend.value?.id);
 
     // Close modals
@@ -585,6 +588,27 @@ const searchUsers = async () => {
     isSearching.value = false;
   }
 };
+
+
+const imageError = ref(false); // Ajoutez cette ligne pour déclarer la variable manquante
+
+// Cette fonction construit l'URL complète de l'image
+const getFullImageUrl = (url: string): string => {
+  // Si l'URL commence déjà par http, la retourner telle quelle
+  if (url.startsWith('http')) {
+    return url;
+  }
+
+  // Sinon, préfixer avec l'URL de l'API
+  return `${import.meta.env.VITE_APP_API_URL.replace(/\/api$/, '')}${url}`;
+};
+
+// Gérer l'erreur de chargement d'image
+const handleImageError = () => {
+  imageError.value = true;
+  console.error("Erreur de chargement de l'image de profil");
+};
+
 const sendFriendRequest = async (user: User) => {
   if (isSending.value) return;
 
@@ -593,6 +617,7 @@ const sendFriendRequest = async (user: User) => {
     await socialStore.sendFriendRequest(user.id);
 
     // Update user status in search results
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const userIndex = searchResults.value.findIndex((u: { id: any; }) => u.id === user.id);
     if (userIndex !== -1) {
       searchResults.value[userIndex].friendStatus = 'pending';
@@ -607,6 +632,7 @@ const sendFriendRequest = async (user: User) => {
   }
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
 const openChatWithFriend = (friendId: any) => {
   // Stocker la source de la navigation pour pouvoir y revenir
   sessionStorage.setItem('chatSourceRoute', 'friends');

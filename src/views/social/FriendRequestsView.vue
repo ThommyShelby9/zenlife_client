@@ -137,11 +137,12 @@
                 <div class="flex items-center">
                   <div class="flex-shrink-0">
                     <img
-                      v-if="request.recipient.profilePictureUrl"
-                      :src="request.recipient.profilePictureUrl"
-                      alt="Profile"
-                      class="h-12 w-12 rounded-full"
-                    />
+      v-if="request.recipient?.profilePictureUrl"
+      :src="getFullImageUrl(request.recipient.profilePictureUrl)"
+      alt="Photo de profil"
+      class="inline-block h-12 w-12 rounded-full"
+      @error="handleImageError"
+    />
                     <div
                       v-else
                       class="h-12 w-12 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center"
@@ -205,7 +206,7 @@
 <script lang="ts" setup>
 import { ref, computed, onMounted } from 'vue';
 import { useToast } from 'vue-toastification';
-import { format, formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
   CheckIcon,
@@ -231,10 +232,12 @@ const actionInProgress = ref<Record<string, boolean>>({});
 
 // Computed properties
 const receivedRequests = computed(() => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return friendRequests.value.filter((request: { isOutgoing: any; status: string; }) => !request.isOutgoing && request.status === 'pending');
 });
 
 const sentRequests = computed(() => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return friendRequests.value.filter((request: { isOutgoing: any; status: string; }) => request.isOutgoing && request.status === 'pending');
 });
 
@@ -261,9 +264,29 @@ const formatTimestamp = (timestamp: string): string => {
   try {
     const date = new Date(timestamp);
     return formatDistanceToNow(date, { addSuffix: true, locale: fr });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     return '';
   }
+};
+
+const imageError = ref(false); // Ajoutez cette ligne pour déclarer la variable manquante
+
+// Cette fonction construit l'URL complète de l'image
+const getFullImageUrl = (url: string): string => {
+  // Si l'URL commence déjà par http, la retourner telle quelle
+  if (url.startsWith('http')) {
+    return url;
+  }
+
+  // Sinon, préfixer avec l'URL de l'API
+  return `${import.meta.env.VITE_APP_API_URL.replace(/\/api$/, '')}${url}`;
+};
+
+// Gérer l'erreur de chargement d'image
+const handleImageError = () => {
+  imageError.value = true;
+  console.error("Erreur de chargement de l'image de profil");
 };
 
 const acceptFriendRequest = async (request: FriendRequest) => {
@@ -274,6 +297,7 @@ const acceptFriendRequest = async (request: FriendRequest) => {
     await socialStore.respondToFriendRequest(request.id, 'accept');
 
     // Update request status
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const requestIndex = friendRequests.value.findIndex((req: { id: any; }) => req.id === request.id);
     if (requestIndex !== -1) {
       friendRequests.value.splice(requestIndex, 1);
@@ -296,6 +320,7 @@ const rejectFriendRequest = async (request: FriendRequest) => {
     await socialStore.respondToFriendRequest(request.id, 'reject');
 
     // Update request status
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const requestIndex = friendRequests.value.findIndex((req: { id: any; }) => req.id === request.id);
     if (requestIndex !== -1) {
       friendRequests.value.splice(requestIndex, 1);
@@ -318,6 +343,7 @@ const cancelFriendRequest = async (request: FriendRequest) => {
     await socialStore.cancelFriendRequest(request.id);
 
     // Update request status
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const requestIndex = friendRequests.value.findIndex((req: { id: any; }) => req.id === request.id);
     if (requestIndex !== -1) {
       friendRequests.value.splice(requestIndex, 1);

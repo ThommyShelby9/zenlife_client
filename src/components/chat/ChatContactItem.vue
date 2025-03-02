@@ -8,11 +8,12 @@
   >
     <div class="relative">
       <img
-        v-if="contact.profilePictureUrl"
-        :src="contact.profilePictureUrl"
-        alt="Profile"
-        class="h-10 w-10 rounded-full object-cover"
-      />
+      v-if="contact?.profilePictureUrl"
+      :src="getFullImageUrl(contact.profilePictureUrl)"
+      alt="Photo de profil"
+      class="inline-block h-10 w-10 rounded-full object-cover"
+      @error="handleImageErrore"
+    />
       <div
         v-else
         class="h-10 w-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center"
@@ -59,13 +60,14 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { ref } from 'vue';
 import { format, isToday, isYesterday, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useUserStore } from '@/stores/user';
 import type { Contact } from '@/types/chat';
 
 // Props
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const props = defineProps<{
   contact: Contact;
   active: boolean;
@@ -77,9 +79,28 @@ defineEmits<{
 }>();
 
 // Store
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const userStore = useUserStore();
 
 // Methods
+const imageError = ref(false); // Ajoutez cette ligne pour déclarer la variable manquante
+
+// Cette fonction construit l'URL complète de l'image
+const getFullImageUrl = (url: string): string => {
+  // Si l'URL commence déjà par http, la retourner telle quelle
+  if (url.startsWith('http')) {
+    return url;
+  }
+
+  // Sinon, préfixer avec l'URL de l'API
+  return `${import.meta.env.VITE_APP_API_URL.replace(/\/api$/, '')}${url}`;
+};
+
+// Gérer l'erreur de chargement d'image
+const handleImageErrore = () => {
+  imageError.value = true;
+  console.error("Erreur de chargement de l'image de profil");
+};
 const getInitials = (name: string): string => {
   const nameParts = name.split(' ');
   if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase();
@@ -99,6 +120,7 @@ const formatLastMessageTime = (timestamp: string | undefined): string => {
     } else {
       return format(date, 'dd/MM', { locale: fr });
     }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     return '';
   }

@@ -292,13 +292,13 @@
               <div>
                 <MenuButton class="max-w-xs bg-white dark:bg-gray-800 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
                   <span class="sr-only">Ouvrir le menu utilisateur</span>
-                  <img
-      v-if="user?.profilePictureUrl"
-      :src="getFullImageUrl(user.profilePictureUrl)"
-      alt="Photo de profil"
-      class="inline-block h-9 w-9 rounded-full"
-      @error="handleImageError"
-    />
+                              <img
+                  v-if="user?.profilePictureUrl"
+                  :src="getFullImageUrl(user.profilePictureUrl)"
+                  alt="Photo de profil"
+                  class="inline-block h-9 w-9 rounded-full"
+                  @error="handleImageError"
+                />
                   <div
                     v-else
                     class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-primary-100 dark:bg-gray-700"

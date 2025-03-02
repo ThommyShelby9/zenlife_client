@@ -89,11 +89,12 @@
               </button>
 
               <img
-                v-if="activeContact?.profilePictureUrl"
-                :src="activeContact.profilePictureUrl"
-                alt="Profile"
-                class="h-10 w-10 rounded-full"
-              />
+      v-if="activeContact?.profilePictureUrl"
+      :src="getFullImageUrl(activeContact.profilePictureUrl)"
+      alt="Photo de profil"
+      class="inline-block h-10 w-10 rounded-full"
+      @error="handleImageErrore"
+    />
               <div
                 v-else
                 class="h-10 w-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center"
@@ -336,7 +337,6 @@ import { format, isToday, isYesterday, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
   ChatAlt2Icon,
-  ChatIcon,
   SearchIcon,
   UserAddIcon,
   PhoneIcon,
@@ -353,20 +353,16 @@ import DashboardLayout from '@/layouts/DashboardLayout.vue';
 import ChatContactItem from '@/components/chat/ChatContactItem.vue';
 import { useChatStore } from '@/stores/chat';
 import { useUserStore } from '@/stores/user';
-import { useFileStore } from '@/stores/file';
 import { formatFileSize } from '@/utils/formatters';
 import type {
   Contact,
   ChatMessagePayload,
   Message,
-  FileAttachment
 } from '@/types/chat';
-import { fileApi } from '@/api/file';
 
 // ---------- STORES ET COMPOSABLES ----------
 const chatStore = useChatStore();
 const userStore = useUserStore();
-const fileStore = useFileStore();
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
@@ -434,6 +430,25 @@ const isSentByMe = (message: Message): boolean => {
   return false;
 };
 
+const imageError = ref(false); // Ajoutez cette ligne pour déclarer la variable manquante
+
+// Cette fonction construit l'URL complète de l'image
+const getFullImageUrl = (url: string): string => {
+  // Si l'URL commence déjà par http, la retourner telle quelle
+  if (url.startsWith('http')) {
+    return url;
+  }
+
+  // Sinon, préfixer avec l'URL de l'API
+  return `${import.meta.env.VITE_APP_API_URL.replace(/\/api$/, '')}${url}`;
+};
+
+// Gérer l'erreur de chargement d'image
+const handleImageErrore = () => {
+  imageError.value = true;
+  console.error("Erreur de chargement de l'image de profil");
+};
+
 const filteredContacts = computed(() => {
   if (!searchQuery.value) return contacts.value;
 
@@ -468,6 +483,7 @@ const formatMessageTime = (timestamp: string): string => {
   if (!timestamp) return '';
   try {
     return format(parseISO(timestamp), 'HH:mm');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     return '';
   }
@@ -488,6 +504,7 @@ const formatMessageDate = (timestamp: string): string => {
     } else {
       return format(date, 'EEEE d MMMM', { locale: fr });
     }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     return '';
   }
@@ -510,6 +527,7 @@ const shouldShowDateSeparator = (index: number): boolean => {
       currentDate.getMonth() !== previousDate.getMonth() ||
       currentDate.getFullYear() !== previousDate.getFullYear()
     );
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     return false;
   }
@@ -825,6 +843,7 @@ const isImageAttachment = (filename: string): boolean => {
 /**
  * Obtient l'URL d'une pièce jointe
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getAttachmentUrl = (attachment: any): string => {
   if (!attachment) return '';
 
@@ -891,6 +910,7 @@ const handleImageError = (event: Event): void => {
 /**
  * Ouvre une pièce jointe
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const openAttachment = (attachment: any): void => {
   // Si on passe un message au lieu d'une pièce jointe
   if (attachment && attachment.attachments && Array.isArray(attachment.attachments) && attachment.attachments.length > 0) {
@@ -926,6 +946,7 @@ const openAttachment = (attachment: any): void => {
 /**
  * Débogue une pièce jointe
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const debugAttachments = (message: any): void => {
   if (!message) {
     console.warn('Message vide ou undefined');
@@ -939,6 +960,7 @@ const debugAttachments = (message: any): void => {
     console.log(`Message avec ${message.attachments.length} pièce(s) jointe(s)`);
 
     // Déboguer chaque pièce jointe individuellement
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     message.attachments.forEach((attachment: any, index: number) => {
       console.group(`Pièce jointe #${index+1}`);
       console.log('ID:', attachment.id || 'Non défini');
