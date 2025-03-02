@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
     <div class="sm:mx-auto sm:w-full sm:max-w-md">
-      <img class="mx-auto h-24 w-auto" src="/img/logo.svg" alt="ZenLife" />
+      <img class="mx-auto h-24 w-auto" src="@/assets/img/logo.png" alt="ZenLife" />
       <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">Mot de passe oublié</h2>
       <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
         Entrez votre adresse e-mail et nous vous enverrons un lien pour réinitialiser votre mot de passe.
