@@ -483,7 +483,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import {
@@ -495,7 +495,6 @@ import {
   Switch
 } from '@headlessui/vue';
 import {
-  CogIcon,
   BellIcon,
   LockClosedIcon,
   InformationCircleIcon,

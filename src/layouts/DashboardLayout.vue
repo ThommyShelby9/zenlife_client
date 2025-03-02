@@ -61,11 +61,12 @@
                   <div class="flex items-center">
                     <div>
                       <img
-                        v-if="user?.profilePictureUrl"
-                        :src="user.profilePictureUrl"
-                        alt="Profile"
-                        class="inline-block h-10 w-10 rounded-full"
-                      />
+      v-if="user?.profilePictureUrl"
+      :src="getFullImageUrl(user.profilePictureUrl)"
+      alt="Photo de profil"
+      class="inline-block h-9 w-9 rounded-full"
+      @error="handleImageError"
+    />
                       <div
                         v-else
                         class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-primary-100 dark:bg-gray-700"
@@ -292,11 +293,12 @@
                 <MenuButton class="max-w-xs bg-white dark:bg-gray-800 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
                   <span class="sr-only">Ouvrir le menu utilisateur</span>
                   <img
-                    v-if="user?.profilePictureUrl"
-                    :src="user.profilePictureUrl"
-                    alt="Profile"
-                    class="h-8 w-8 rounded-full"
-                  />
+      v-if="user?.profilePictureUrl"
+      :src="getFullImageUrl(user.profilePictureUrl)"
+      alt="Photo de profil"
+      class="inline-block h-9 w-9 rounded-full"
+      @error="handleImageError"
+    />
                   <div
                     v-else
                     class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-primary-100 dark:bg-gray-700"
@@ -348,7 +350,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   Dialog,
@@ -363,7 +365,6 @@ import {
 import {
   BellIcon,
   CalendarIcon,
-  ChartBarIcon,
   CurrencyDollarIcon,
   HomeIcon,
   MenuIcon,
@@ -381,13 +382,11 @@ import {
   CheckCircleIcon,
   UserAddIcon,
 } from '@heroicons/vue/outline';
-import { format, formatDistance } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import { useToast } from 'vue-toastification';
 import { useAuthStore } from '@/stores/auth';
 import { useUserStore } from '@/stores/user';
 import { useNotificationStore } from '@/stores/notification';
-import type { Notification, NotificationType } from '@/types/notification';
+import type { Notification } from '@/types/notification';
 import { fileApi } from '@/api/file';
 
 
@@ -420,6 +419,7 @@ const isDarkMode = ref(document.documentElement.classList.contains('dark'));
 const imageError = ref(false); // Ajoutez cette ligne pour déclarer la variable manquante
 
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const profilePictureUrl = userStore.user?.profilePictureUrl
   ? fileApi.getFileViewUrl(userStore.user.profilePictureUrl)
   : undefined;
@@ -558,7 +558,7 @@ const formatRelativeTime = (date: Date) => {
 
 // Get notification icon based on type
 const getNotificationIcon = (type: string) => {
-  const iconMap: { [key: string]: any } = {
+  const iconMap: { [key: string]: unknown } = {
     'info': InformationCircleIcon,
     'success': CheckCircleIcon,
     'warning': ExclamationCircleIcon,
