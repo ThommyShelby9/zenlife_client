@@ -531,8 +531,8 @@
                     </label>
                     <div class="mt-1 relative rounded-md shadow-sm">
                       <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span class="text-gray-500 dark:text-gray-400 sm:text-sm">{{ getCurrencySymbol() }}</span>
-                      </div>
+<!--                         <span class="text-gray-500 dark:text-gray-400 sm:text-sm">{{ getCurrencySymbol() }}</span>
+ -->                      </div>
                       <input
                         id="budget-amount"
                         v-model.number="budgetForm.amount"
