@@ -529,6 +529,7 @@ const goToToday = () => {
 };
 
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const updateMoodRating = (rating: number) => {
   moodRating.value = rating;
 };
@@ -742,5 +743,29 @@ watch(() => dailyPlanner.value?.tasks, () => {
     max-width: 100%;
     white-space: nowrap;
   }
+}
+</style>
+<style>
+/* Augmentation de la taille des champs input */
+input, select, textarea {
+  min-height: 2.75rem !important; /* Hauteur minimale augmentée */
+  padding: 0.625rem 0.75rem !important; /* Padding augmenté */
+}
+
+/* Style pour les cartes de budget */
+.budget-card {
+  transition: all 0.3s ease;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.budget-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Taille minimale pour les boutons */
+button {
+  min-height: 2.5rem;
 }
 </style>
