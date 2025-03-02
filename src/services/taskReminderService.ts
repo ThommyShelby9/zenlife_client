@@ -120,6 +120,7 @@ export class TaskReminderService {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private sendLastMinuteReminder(task: PlannerTask, minutesLeft: number, notificationStore: any): void {
     // Vérifier si la tâche a un ID valide
     if (!task.id) {
@@ -130,6 +131,7 @@ export class TaskReminderService {
     console.log(`Préparation du rappel URGENT pour la tâche ${task.id} - ${task.title} (${minutesLeft} min)`);
 
     // Créer une clé spéciale pour ce type de rappel
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const lastMinuteKey = "last_minute";
 
     // Vérifier si cette notification a déjà été envoyée
@@ -177,6 +179,7 @@ export class TaskReminderService {
   /**
    * Envoyer un rappel pour une tâche
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private sendTaskReminder(task: PlannerTask, minutesLeft: number, notificationStore: any): void {
     // Vérifier si la tâche a un ID valide
     if (!task.id) {

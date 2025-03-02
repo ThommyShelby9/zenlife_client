@@ -153,7 +153,8 @@ apiClient.interceptors.response.use(
 
     // Handle 404 Not Found
     if (status === 404) {
-      toast.error('La ressource demandée n\'existe pas.');
+      console.log('La ressource demandée n\'existe pas.');
+
     }
 
     // Handle 500 Server Error
