@@ -1,30 +1,35 @@
 <template>
-  <DashboardLayout>
-    <div class="mx-auto px-4 sm:px-6 md:px-8">
-      <div class="flex justify-between items-center">
+  <DashboardLayout class="overflow-x-hidden">
+    <div class="mx-auto px-4 sm:px-6 md:px-8 max-w-full overflow-x-hidden">
+      <!-- Header responsive - reorganisé pour mobile -->
+      <div class="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center md:space-y-0">
         <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Résumé financier</h1>
-        <div class="flex space-x-2">
-      <RouterLink
-        to="/finance/budget"
-        class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-      >
-        <CashIcon class="h-4 w-4 mr-1" />
-        Budget
-      </RouterLink>
-      <RouterLink
-        to="/finance/expense"
-        class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-      >
-        <ReceiptTaxIcon class="h-4 w-4 mr-1" />
-        Dépenses
-      </RouterLink>
-    </div>
-        <div class="flex space-x-4">
+
+        <!-- Boutons de navigation séparés sur mobile -->
+        <div class="flex flex-wrap gap-2">
+          <RouterLink
+            to="/finance/budget"
+            class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          >
+            <CashIcon class="h-4 w-4 mr-1" />
+            Budget
+          </RouterLink>
+          <RouterLink
+            to="/finance/expense"
+            class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          >
+            <ReceiptTaxIcon class="h-4 w-4 mr-1" />
+            Dépenses
+          </RouterLink>
+        </div>
+
+        <!-- Sélecteur de mois et navigation -->
+        <div class="flex flex-wrap gap-2">
           <div class="relative">
             <input
               type="month"
               v-model="selectedMonth"
-              class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md py-2 px-4 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md py-2 px-4 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 w-full"
               :max="maxMonth"
               @change="fetchFinancialSummary"
             />
@@ -55,9 +60,9 @@
         </svg>
       </div>
 
-      <div v-else>
-        <!-- Financial overview cards -->
-        <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div v-else class="mt-6 max-w-full">
+        <!-- Financial overview cards - responsive grid -->
+        <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <!-- Total budget card -->
           <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
             <div class="px-4 py-5 sm:p-6">
@@ -105,7 +110,7 @@
           </div>
 
           <!-- Remaining budget card -->
-          <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+          <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg sm:col-span-2 lg:col-span-1">
             <div class="px-4 py-5 sm:p-6">
               <div class="flex items-center">
                 <div
@@ -155,14 +160,14 @@
           </div>
         </div>
 
-        <!-- Spending by category -->
+        <!-- Spending by category - adapté pour mobile -->
         <div class="mt-8 bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
           <div class="px-4 py-5 sm:px-6 border-b border-gray-200 dark:border-gray-700">
             <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
               Dépenses par catégorie
             </h3>
             <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
-              Répartition de vos dépenses par catégorie pour {{ formatMonthYear(new Date(selectedMonth)) }}
+              Répartition pour {{ formatMonthYear(new Date(selectedMonth)) }}
             </p>
           </div>
           <div class="px-4 py-5 sm:p-6">
@@ -181,25 +186,25 @@
                 </div>
               </div>
 
-              <!-- Category breakdown table -->
+              <!-- Category breakdown table - responsive -->
               <div class="overflow-hidden">
                 <div class="flex flex-col">
-                  <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                    <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-                      <div class="overflow-hidden">
+                  <div class="-my-2 overflow-x-auto">
+                    <div class="py-2 align-middle inline-block min-w-full">
+                      <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                           <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
-                              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                              <th scope="col" class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                 Catégorie
                               </th>
-                              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                              <th scope="col" class="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                 Montant
                               </th>
-                              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                              <th scope="col" class="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                 %
                               </th>
-                              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                              <th scope="col" class="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                 Budget
                               </th>
                             </tr>
@@ -211,32 +216,32 @@
                               @click="showCategoryDetails(category)"
                               class="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                             >
-                              <td class="px-6 py-4 whitespace-nowrap">
+                              <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                   <div class="flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center" :style="{ backgroundColor: getCategoryColor(category.category) }">
                                     <component :is="getCategoryIcon(category.category)" class="h-4 w-4 text-white" />
                                   </div>
-                                  <div class="ml-4">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                  <div class="ml-2 md:ml-4">
+                                    <div class="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
                                       {{ category.category.name }}
                                     </div>
                                   </div>
                                 </div>
                               </td>
-                              <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900 dark:text-white">
+                              <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-xs sm:text-sm text-gray-900 dark:text-white">
                                 {{ formatCurrency(category.amount) }}
                               </td>
-                              <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900 dark:text-white">
+                              <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-xs sm:text-sm text-gray-900 dark:text-white">
                                 {{ category.percentage.toFixed(1) }}%
                               </td>
-                              <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                              <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-xs sm:text-sm">
                                 <div v-if="category.budget" :class="[
                                   category.status === 'under' ? 'text-green-600 dark:text-green-400' :
                                   category.status === 'near' ? 'text-yellow-600 dark:text-yellow-400' :
                                   'text-red-600 dark:text-red-400'
                                 ]">
                                   {{ formatCurrency(category.budget) }}
-                                  <span class="ml-1 text-xs">
+                                  <span class="ml-1 text-xs hidden sm:inline">
                                     ({{ ((category.amount / category.budget) * 100).toFixed(0) }}%)
                                   </span>
                                 </div>
@@ -272,9 +277,9 @@
           </div>
         </div>
 
-        <!-- Recent expenses -->
+        <!-- Recent expenses - adapté pour mobile -->
         <div class="mt-8 bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
-          <div class="px-4 py-5 sm:px-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+          <div class="px-4 py-5 sm:px-6 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
             <div>
               <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
                 Dépenses récentes
@@ -298,13 +303,13 @@
                     <div class="flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center" :style="{ backgroundColor: getCategoryColor(expense.category) }">
                       <component :is="getCategoryIcon(expense.category)" class="h-5 w-5 text-white" />
                     </div>
-                    <div class="ml-4">
-                      <p class="text-sm font-medium text-gray-900 dark:text-white">{{ expense.title }}</p>
-                      <p class="text-sm text-gray-500 dark:text-gray-400">{{ formatDate(expense.date) }}</p>
+                    <div class="ml-3">
+                      <p class="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[150px] sm:max-w-none">{{ expense.title }}</p>
+                      <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{{ formatDate(expense.date) }}</p>
                     </div>
                   </div>
                   <p
-                    class="text-sm font-medium"
+                    class="text-sm font-medium whitespace-nowrap"
                     :class="expense.amount < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'"
                   >
                     {{ formatCurrency(expense.amount) }}
@@ -324,7 +329,7 @@
       </div>
     </div>
 
-    <!-- Category details modal -->
+    <!-- Category details modal - adapté pour mobile -->
     <TransitionRoot appear :show="showCategoryModal" as="template">
       <Dialog as="div" @close="closeCategoryModal" class="relative z-10">
         <TransitionChild
@@ -350,9 +355,9 @@
               leave-from="opacity-100 scale-100"
               leave-to="opacity-0 scale-95"
             >
-              <DialogPanel class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
-                <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 dark:text-white">
-                  Détails de la catégorie: {{ selectedCategory?.category.name }}
+              <DialogPanel class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-4 sm:p-6 text-left align-middle shadow-xl transition-all">
+                <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 dark:text-white break-words">
+                  Détails: {{ selectedCategory?.category.name }}
                 </DialogTitle>
 
                 <div v-if="selectedCategory" class="mt-4">
@@ -390,16 +395,16 @@
                   </div>
 
                   <!-- Category expenses list -->
-                  <div class="mt-6">
+                  <div class="mt-6 overflow-x-auto">
                     <h5 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Dépenses de cette catégorie</h5>
                     <ul class="divide-y divide-gray-200 dark:divide-gray-700">
                       <li v-for="expense in categoryExpenses" :key="expense.id" class="py-4 flex items-center justify-between">
-                        <div>
-                          <p class="text-sm font-medium text-gray-900 dark:text-white">{{ expense.title }}</p>
-                          <p class="text-sm text-gray-500 dark:text-gray-400">{{ formatDate(expense.date) }}</p>
+                        <div class="pr-2">
+                          <p class="text-sm font-medium text-gray-900 dark:text-white break-words">{{ expense.title }}</p>
+                          <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{{ formatDate(expense.date) }}</p>
                         </div>
                         <p
-                          class="text-sm font-medium"
+                          class="text-sm font-medium whitespace-nowrap"
                           :class="expense.amount < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'"
                         >
                           {{ formatCurrency(expense.amount) }}
@@ -409,7 +414,7 @@
                   </div>
                 </div>
 
-                <div class="mt-6 flex justify-between">
+                <div class="mt-6 flex flex-col sm:flex-row sm:justify-between gap-2">
                   <RouterLink
                     :to="`/finance/budget?category=${selectedCategory?.category.id}`"
                     class="inline-flex justify-center rounded-md border border-transparent bg-primary-100 dark:bg-primary-900 px-4 py-2 text-sm font-medium text-primary-900 dark:text-primary-100 hover:bg-primary-200 dark:hover:bg-primary-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
@@ -634,3 +639,55 @@ watch(selectedMonth, async () => {
   await fetchFinancialSummary();
 });
 </script>
+
+
+<style scoped>
+/* Empêcher le défilement horizontal sur tout le composant */
+:deep(body),
+:deep(html) {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* S'assurer que le contenu ne déborde pas horizontalement */
+.overflow-x-hidden {
+  overflow-x: hidden;
+}
+
+/* Assurer que les boutons s'adaptent correctement */
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+/* Gérer les textes trop longs */
+.break-words {
+  word-break: break-word;
+}
+
+/* Tailles de texte adaptatives */
+@media screen and (max-width: 640px) {
+  .text-lg {
+    font-size: 1.025rem;
+  }
+
+  .text-xl {
+    font-size: 1.125rem;
+  }
+
+  /* Réduire le padding sur mobile */
+  .p-6 {
+    padding: 1rem;
+  }
+
+  .px-6 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Ajuster les cards pour qu'elles s'adaptent correctement */
+  .cards-container > div {
+    width: 100%;
+  }
+}
+</style>

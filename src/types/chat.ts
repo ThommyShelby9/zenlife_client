@@ -1,5 +1,6 @@
 import type { User } from './auth';
 
+// Types pour les messages
 export interface ChatMessage {
   id?: string;
   sender: User;
@@ -10,11 +11,23 @@ export interface ChatMessage {
   attachments?: FileAttachment[];
 }
 
-export interface ChatMessagePayload {
-  receiver: User | { id: string };
+// types/chat.ts
+export type ChatMessagePayload = {
+  receiver: { id: string };
   content: string;
-}
+  attachments?: Array<{
+    id: string;
+    type: 'FILE' | 'VOICE_NOTE';
+    url: string;
+    metadata: {
+      duration?: number;
+      size: number;
+      mimeType: string;
+    };
+  }>;
+};
 
+// Types pour les contacts
 export interface ChatContact {
   id: string;
   fullName: string;
@@ -25,15 +38,19 @@ export interface ChatContact {
   unreadCount: number;
 }
 
+// Types pour les pièces jointes
 export interface FileAttachment {
+  url: any;
+  storagePath: string;
   id: string;
   messageId: string;
   filename: string;
   originalFilename?: string;
   size?: number;
   contentType?: string;
-  durationSeconds?: number; // For voice notes
+  durationSeconds?: number; // Pour les notes vocales
   createdAt?: string;
+  fileSize?: number;
 }
 
 export interface VoiceNote extends FileAttachment {
@@ -45,20 +62,28 @@ export interface ChatConversation {
   messages: ChatMessage[];
 }
 
-// Dans votre fichier de types chat.ts
-// Dans @/types/chat.ts
+// Types utilisés dans les composants
 export interface Contact {
   id: string;
   fullName: string;
   username?: string;
+  email?: string;
   profilePictureUrl?: string;
+  lastMessage?: {
+    content: string;
+    timestamp: string;
+    isLastMessageFromMe?: boolean;
+  };
+  online: boolean;
   unreadCount: number;
-  lastMessage?: Message;
-  online?: boolean; // Ajoutez cette propriété optionnelle
+  isVoiceNote?: boolean;
+  hasAttachments?: boolean;
+  attachmentsCount?: number;
 }
 
-// Dans @/types/chat.ts
 export interface Message {
+  senderId: string;
+  tempSide: string;
   id: string;
   content: string;
   sender: {
@@ -70,5 +95,7 @@ export interface Message {
   timestamp: string;
   read: boolean;
   readAt?: string;
-  attachments?: FileAttachment[]; // Ajoutez cette propriété
+  attachments?: FileAttachment[];
+  isLastMessageFromMe?: boolean;
+  isFromCurrentUser?: boolean;
 }

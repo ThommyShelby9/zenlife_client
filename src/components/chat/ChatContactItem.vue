@@ -11,7 +11,7 @@
         v-if="contact.profilePictureUrl"
         :src="contact.profilePictureUrl"
         alt="Profile"
-        class="h-10 w-10 rounded-full"
+        class="h-10 w-10 rounded-full object-cover"
       />
       <div
         v-else
@@ -40,8 +40,10 @@
       </div>
       <div class="flex justify-between items-center">
         <p class="text-xs truncate text-gray-500 dark:text-gray-400 max-w-[140px]">
-          <span v-if="contact.lastMessage?.sender?.id === currentUserId">Vous: </span>
-          {{ contact.lastMessage?.content || 'Aucun message' }}
+          <span v-if="contact.lastMessage?.isLastMessageFromMe">Vous: </span>
+          <span v-if="contact.isVoiceNote">🎤 Note vocale</span>
+          <span v-else-if="contact.hasAttachments">📎 Pièce jointe</span>
+          <span v-else>{{ contact.lastMessage?.content || 'Aucun message' }}</span>
         </p>
         <div
           v-if="contact.unreadCount > 0"
@@ -59,11 +61,13 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 import { format, isToday, isYesterday, parseISO } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { useUserStore } from '@/stores/user';
+import type { Contact } from '@/types/chat';
 
 // Props
 const props = defineProps<{
-  contact: any;
+  contact: Contact;
   active: boolean;
 }>();
 
@@ -74,9 +78,6 @@ defineEmits<{
 
 // Store
 const userStore = useUserStore();
-
-// Computed
-const currentUserId = computed(() => userStore.user?.id || '');
 
 // Methods
 const getInitials = (name: string): string => {
@@ -92,11 +93,11 @@ const formatLastMessageTime = (timestamp: string | undefined): string => {
     const date = parseISO(timestamp);
 
     if (isToday(date)) {
-      return format(date, 'HH:mm');
+      return format(date, 'HH:mm', { locale: fr });
     } else if (isYesterday(date)) {
       return 'Hier';
     } else {
-      return format(date, 'dd/MM');
+      return format(date, 'dd/MM', { locale: fr });
     }
   } catch (error) {
     return '';

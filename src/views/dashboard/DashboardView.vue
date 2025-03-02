@@ -260,6 +260,8 @@ import type { Expense } from '@/types/finance';
 import type { WaterProgressData } from '@/types/waterReminder';
 import type { DailyPlanner } from '@/types/planner';
 import type { FinancialSummary } from '@/types/finance';
+import { formatCurrency, formatMonthYear } from '@/utils/formatters';
+
 
 
 // Icons import
@@ -330,9 +332,7 @@ const getTodayDate = () => {
 };
 
 // Format currency method
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
-};
+
 
 // Get category icon
 const getCategoryIcon = (categoryName: string) => {

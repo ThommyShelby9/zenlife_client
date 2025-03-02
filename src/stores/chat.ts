@@ -5,11 +5,87 @@ import { fileApi } from '@/api/file';
 import { useUserStore } from './user';
 import { useToast } from 'vue-toastification';
 import websocketService from '@/services/websocketService';
-import type { Message, Contact } from '@/types/chat';
+import type { User } from '@/types/auth';
 
-// Définition des types
-// Dans votre fichier de types chat.ts
+// Importation des types depuis le fichier de types
+export interface ChatMessage {
+  id?: string;
+  sender: User;
+  receiver: User;
+  content: string;
+  timestamp: string;
+  read: boolean;
+  attachments?: FileAttachment[];
+}
 
+export interface ChatMessagePayload {
+  receiver: User | { id: string };
+  content: string;
+}
+
+export interface ChatContact {
+  id: string;
+  fullName: string;
+  username?: string;
+  profilePictureUrl?: string;
+  online: boolean;
+  lastMessage?: ChatMessage;
+  unreadCount: number;
+}
+
+export interface FileAttachment {
+  id: string;
+  messageId: string;
+  filename: string;
+  originalFilename?: string;
+  size?: number;
+  contentType?: string;
+  durationSeconds?: number; // Pour les notes vocales
+  createdAt?: string;
+}
+
+export interface VoiceNote extends FileAttachment {
+  durationSeconds: number;
+}
+
+export interface ChatConversation {
+  contact: ChatContact;
+  messages: ChatMessage[];
+}
+
+// Types spécifiques au composant
+export interface Contact {
+  id: string;
+  fullName: string;
+  username?: string;
+  email?: string;
+  profilePictureUrl?: string;
+  lastMessage?: {
+    content: string;
+    timestamp: string;
+    isLastMessageFromMe?: boolean;
+  };
+  online: boolean;
+  unreadCount: number;
+  isVoiceNote?: boolean;
+  hasAttachments?: boolean;
+  attachmentsCount?: number;
+}
+
+export interface Message {
+  id: string;
+  content: string;
+  sender: {
+    id: string;
+    fullName: string;
+    profilePictureUrl?: string;
+  };
+  receiver: { id: string };
+  timestamp: string;
+  read: boolean;
+  readAt?: string;
+  attachments?: FileAttachment[];
+}
 
 export const useChatStore = defineStore('chat', () => {
   // State
@@ -50,9 +126,23 @@ export const useChatStore = defineStore('chat', () => {
     // Mettre à jour le dernier message et le nombre de messages non lus
     const contactIndex = contacts.value.findIndex(c => c.id === senderId);
     if (contactIndex !== -1) {
-      contacts.value[contactIndex].lastMessage = message;
+      contacts.value[contactIndex].lastMessage = {
+        content: message.content,
+        timestamp: message.timestamp,
+        isLastMessageFromMe: false
+      };
       contacts.value[contactIndex].unreadCount =
         (contacts.value[contactIndex].unreadCount || 0) + 1;
+
+      // Mettre à jour les indicateurs d'attachements
+      if (message.attachments && message.attachments.length > 0) {
+        contacts.value[contactIndex].hasAttachments = true;
+        contacts.value[contactIndex].attachmentsCount = message.attachments.length;
+        // Vérifier s'il y a une note vocale
+        contacts.value[contactIndex].isVoiceNote = message.attachments.some(
+          a => a.durationSeconds !== undefined
+        );
+      }
     }
 
     // Afficher une notification toast
@@ -98,6 +188,14 @@ export const useChatStore = defineStore('chat', () => {
     try {
       const response = await chatApi.getContacts();
       contacts.value = response.data;
+
+      // S'assurer que tous les contacts ont les valeurs par défaut pour online et unreadCount
+      contacts.value = contacts.value.map(contact => ({
+        ...contact,
+        online: contact.online || false,
+        unreadCount: contact.unreadCount || 0
+      }));
+
       return contacts.value;
     } catch (error) {
       console.error('Error loading contacts:', error);
@@ -122,9 +220,9 @@ export const useChatStore = defineStore('chat', () => {
     }
   };
 
-  const sendMessage = async (message: { receiver: { id: string }, content: string }) => {
+  const sendMessage = async (messagePayload: ChatMessagePayload) => {
     try {
-      const response = await chatApi.sendMessage(message);
+      const response = await chatApi.sendMessage(messagePayload);
 
       // Récupérer l'utilisateur actuel
       const userStore = useUserStore();
@@ -134,33 +232,40 @@ export const useChatStore = defineStore('chat', () => {
         throw new Error('Utilisateur non connecté');
       }
 
-      const sender = {
-        id: userStore.user.id,
-        fullName: userStore.user.fullName,
-        profilePictureUrl: userStore.user.profilePictureUrl
-      };
+      // Obtenir l'ID du destinataire
+      const receiverId = typeof messagePayload.receiver === 'object'
+        ? messagePayload.receiver.id
+        : messagePayload.receiver;
 
-      // Créer le nouveau message
+      // Créer le nouveau message pour l'affichage
       const newMessage: Message = {
         id: response.data.messageId,
-        content: message.content,
-        sender,
-        receiver: { id: message.receiver.id },
+        content: messagePayload.content,
+        sender: {
+          id: userStore.user.id,
+          fullName: userStore.user.fullName,
+          profilePictureUrl: userStore.user.profilePictureUrl
+        },
+        receiver: { id: receiverId },
         timestamp: new Date().toISOString(),
         read: false
       };
 
       // Initialiser la conversation si nécessaire
-      if (!conversations.value[message.receiver.id]) {
-        conversations.value[message.receiver.id] = [];
+      if (!conversations.value[receiverId]) {
+        conversations.value[receiverId] = [];
       }
 
-      conversations.value[message.receiver.id].push(newMessage);
+      conversations.value[receiverId].push(newMessage);
 
       // Mettre à jour le dernier message du contact
-      const contactIndex = contacts.value.findIndex(c => c.id === message.receiver.id);
+      const contactIndex = contacts.value.findIndex(c => c.id === receiverId);
       if (contactIndex !== -1) {
-        contacts.value[contactIndex].lastMessage = newMessage;
+        contacts.value[contactIndex].lastMessage = {
+          content: newMessage.content,
+          timestamp: newMessage.timestamp,
+          isLastMessageFromMe: true
+        };
       }
 
       return response.data;
@@ -169,41 +274,69 @@ export const useChatStore = defineStore('chat', () => {
       throw error;
     }
   };
+
+  // Dans sendMessageWithAttachments, assurez-vous que les pièces jointes sont correctement envoyées
   const sendMessageWithAttachments = async (receiverId: string, content: string, files: File[]) => {
     try {
-      // First, send the text message
+      // Envoyer d'abord le message texte
       const messageResponse = await chatApi.sendMessage({
         receiver: { id: receiverId },
-        content: content
+        content: content.trim()
       });
 
       const messageId = messageResponse.data.messageId;
+      console.log('ID du message créé:', messageId);
 
-      // Then upload each file as an attachment
-      const attachmentPromises = files.map(file => {
-        // Check if it's a voice note (audio file)
-        if (file.type.startsWith('audio/')) {
-          // For voice notes, we need to calculate duration
-          const durationSeconds = Math.floor(file.size / 10000) + 2;
-          return fileApi.uploadVoiceNote(file, messageId, durationSeconds);
-        } else {
-          // Regular file attachment
-          return fileApi.uploadFile(file, messageId);
+      // Pour stocker les résultats des téléchargements
+      const uploadResults = [];
+
+      // Puis télécharger chaque fichier comme pièce jointe
+      for (const file of files) {
+        try {
+          let result;
+          // Envoyer soit comme note vocale, soit comme fichier normal
+          if (file.type.startsWith('audio/')) {
+            // Pour les notes vocales, calculer la durée approximative
+            const durationSeconds = Math.floor(file.size / 10000) + 2;
+            result = await fileApi.uploadVoiceNote(file, messageId, durationSeconds);
+            console.log('Note vocale envoyée:', file.name);
+          } else {
+            // Fichier normal
+            result = await fileApi.uploadFile(file, messageId);
+            console.log('Fichier envoyé:', file.name);
+          }
+          uploadResults.push(result);
+        } catch (fileError) {
+          console.error('Erreur lors du téléchargement du fichier:', file.name, fileError);
         }
-      });
+      }
 
-      await Promise.all(attachmentPromises);
+      // Après avoir téléchargé toutes les pièces jointes, actualiser la conversation
+      const conversation = await getConversation(receiverId);
 
-      // After uploading all attachments, refresh the conversation
-      await getConversation(receiverId);
+      // Si la dernière opération a réussi, mettre à jour le message dans la conversation locale
+      // pour s'assurer que les pièces jointes sont bien associées au message
+      if (conversation && conversation.length > 0) {
+        // Trouver le message qui vient d'être envoyé dans la conversation mise à jour
+        const updatedMessage = conversation.find((msg: { id: any; }) => msg.id === messageId);
+        if (updatedMessage) {
+          // Mettre à jour le contenu dans la version locale
+          updatedMessage.content = content.trim();
 
-      return { messageId };
+          // Mettre à jour le message dans la conversation locale
+          const msgIndex = conversations.value[receiverId]?.findIndex(msg => msg.id === messageId) ?? -1;
+          if (msgIndex !== -1 && conversations.value[receiverId]) {
+            conversations.value[receiverId][msgIndex] = updatedMessage;
+          }
+        }
+      }
+
+      return uploadResults;
     } catch (error) {
-      console.error('Error sending message with attachments:', error);
+      console.error('Erreur lors de l\'envoi du message avec pièces jointes:', error);
       throw error;
     }
   };
-
   const markAsRead = async (messageId: string) => {
     try {
       await chatApi.markAsRead(messageId);

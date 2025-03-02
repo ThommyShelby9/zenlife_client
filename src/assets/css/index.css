@@ -139,3 +139,34 @@
 .animate-pulse-border {
   animation: pulse-border 2s infinite;
 }
+
+/* Styles globaux pour tous les inputs */
+.input-default {
+  @apply block w-full py-3 px-4 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm 
+         text-base dark:bg-gray-700 dark:text-white
+         focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
+}
+
+/* Pour les inputs de recherche avec icône */
+.search-input {
+  @apply block w-full py-3 pl-10 pr-4 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm 
+         text-base dark:bg-gray-700 dark:text-white
+         focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
+}
+
+/* Pour les textarea */
+.textarea-default {
+  @apply block w-full py-3 px-4 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm 
+         text-base dark:bg-gray-700 dark:text-white resize-y min-h-[100px]
+         focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
+}
+
+/* Pour les inputs plus petits */
+.input-sm {
+  @apply py-2 px-3 text-sm;
+}
+
+/* Pour les inputs plus grands */
+.input-lg {
+  @apply py-4 px-5 text-lg;
+}

@@ -23,9 +23,13 @@
                 </div>
               </TransitionChild>
               <div class="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
-                <div class="flex-shrink-0 flex items-center px-4">
-                  <img class="h-8 w-auto" src="@/assets/img/logo.png" alt="ZenLife" />
+                <div class="flex justify-center items-center px-4">
+                  <img class="h-12 w-auto" src="@/assets/img/logo.png" alt="ZenLife" />
+
                 </div>
+                <div class="text-center py-3 border-t border-gray-200 dark:border-gray-700">
+  <span class="font-fancy text-xl text-primary-600 dark:text-primary-400">ZenLife</span>
+</div>
                 <nav class="mt-5 px-2 space-y-1">
                   <RouterLink
                     v-for="item in navigation"
@@ -96,9 +100,12 @@
       <!-- Sidebar component -->
       <div class="flex-1 flex flex-col min-h-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
         <div class="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
-          <div class="flex items-center flex-shrink-0 px-4">
-            <img class="h-8 w-auto" src="@/assets/img/logo.png" alt="ZenLife" />
-          </div>
+          <div class="flex justify-center items-center px-4">
+    <img class="h-12 w-auto" src="@/assets/img/logo.png" alt="ZenLife" />
+  </div>
+  <div class="text-center py-3 border-t border-gray-200 dark:border-gray-700">
+  <span class="font-fancy text-xl text-primary-600 dark:text-primary-400">ZenLife</span>
+</div>
           <nav class="mt-5 flex-1 px-2 space-y-1">
             <RouterLink
               v-for="item in navigation"
@@ -395,7 +402,6 @@ const navigation = [
   { name: 'Pensées positives', href: '/positive-thoughts', icon: LightBulbIcon },
   { name: 'Amis', href: '/friends', icon: UsersIcon },
   { name: 'Messages', href: '/chat', icon: ChatAlt2Icon },
-  { name: 'Statistiques', href: '/stats', icon: ChartBarIcon },
 ];
 
 // Composables
@@ -669,3 +675,10 @@ onMounted(async () => {
   }
 });
 </script>
+
+<style>
+.font-fancy {
+  font-family: 'Pacifico', cursive, sans-serif;
+  letter-spacing: 1px;
+}
+</style>

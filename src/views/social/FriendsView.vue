@@ -26,18 +26,18 @@
 
       <!-- Search and filters -->
       <div class="mt-6 bg-white dark:bg-gray-800 shadow rounded-lg p-4">
-        <div class="relative">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <SearchIcon class="h-5 w-5 text-gray-400" />
-          </div>
-          <input
-  type="text"
-  v-model="search"
-  class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-base dark:bg-gray-700 dark:text-white"
-  placeholder="Rechercher un ami..."
-/>
-        </div>
-      </div>
+  <div class="relative">
+    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+      <SearchIcon class="h-5 w-5 text-gray-400" />
+    </div>
+    <input
+      type="text"
+      v-model="search"
+      class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-base dark:bg-gray-700 dark:text-white"
+      placeholder="Rechercher un ami..."
+    />
+  </div>
+</div>
 
       <!-- Loading state -->
       <div v-if="isLoading" class="mt-8 flex justify-center">
@@ -167,14 +167,14 @@
                         Nom d'utilisateur ou e-mail
                       </label>
                       <div class="mt-1">
-                        <input
-  id="search-friend"
-  v-model="friendSearch"
-  type="text"
-  class="block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-base dark:bg-gray-700 dark:text-white py-3"
-  placeholder="@username ou email@example.com"
-/>
-                      </div>
+  <input
+    id="search-friend"
+    v-model="friendSearch"
+    type="text"
+    class="block w-full py-3 px-4 rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-base dark:bg-gray-700 dark:text-white"
+    placeholder="@username ou email@example.com"
+  />
+</div>
                     </div>
 
                     <div v-if="searchResults.length > 0" class="mt-4">
@@ -605,6 +605,14 @@ const sendFriendRequest = async (user: User) => {
   } finally {
     isSending.value = false;
   }
+};
+
+const openChatWithFriend = (friendId: any) => {
+  // Stocker la source de la navigation pour pouvoir y revenir
+  sessionStorage.setItem('chatSourceRoute', 'friends');
+
+  // Rediriger vers la page de conversation
+  router.push({ path: `/chat/${friendId}` });
 };
 
 // Initialize

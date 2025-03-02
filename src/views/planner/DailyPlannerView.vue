@@ -1,13 +1,14 @@
 <template>
-  <DashboardLayout>
-    <div class="mx-auto px-4 sm:px-6 md:px-8">
-      <div class="flex justify-between items-center">
+  <DashboardLayout class="overflow-x-hidden">
+    <div class="mx-auto px-4 sm:px-6 md:px-8 max-w-full overflow-x-hidden">
+      <!-- Header responsive - reorganize on mobile -->
+      <div class="flex flex-col md:flex-row md:justify-between md:items-center space-y-4 md:space-y-0">
         <div>
           <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Planning du jour</h1>
           <p class="text-sm text-gray-500 dark:text-gray-400">{{ formatDayName(selectedDate) }}, {{ formatDate(selectedDate) }}</p>
         </div>
-        <div class="flex space-x-4">
-          <div class="flex">
+        <div class="flex flex-wrap gap-2 md:gap-4">
+          <div class="flex flex-nowrap">
             <button
               @click="navigateDate(-1)"
               class="inline-flex items-center p-2 border border-gray-300 dark:border-gray-700 rounded-l-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
@@ -18,7 +19,7 @@
               <input
                 type="date"
                 v-model="formattedSelectedDate"
-                class="min-w-[150px] py-2 px-4 border-y border-gray-300 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                class="w-full md:min-w-[150px] py-2 px-2 md:px-4 border-y border-gray-300 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                 @change="onDateChange"
               />
             </div>
@@ -40,7 +41,7 @@
             class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
           >
             <PlusIcon class="h-4 w-4 mr-2" />
-            Ajouter une tâche
+            <span class="whitespace-nowrap">Ajouter une tâche</span>
           </button>
         </div>
       </div>
@@ -53,10 +54,10 @@
         </svg>
       </div>
 
-      <div v-else class="mt-6">
+      <div v-else class="mt-6 max-w-full">
         <!-- Task progress -->
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6">
-          <div class="flex items-center justify-between mb-4">
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-4 md:p-6 mb-6 overflow-x-hidden">
+          <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
             <h3 class="text-lg font-medium text-gray-900 dark:text-white">Progression des tâches</h3>
             <div class="text-sm text-gray-500 dark:text-gray-400">
               {{ completedTasksCount }} / {{ totalTasksCount }} terminées
@@ -70,7 +71,7 @@
               ></div>
             </div>
           </div>
-          <div class="grid grid-cols-3 gap-4 text-center">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
             <div>
               <div class="text-lg font-semibold text-gray-900 dark:text-white">{{ highPriorityCompletion }}%</div>
               <div class="text-xs text-gray-500 dark:text-gray-400">Tâches prioritaires</div>
@@ -89,7 +90,7 @@
         </div>
 
         <!-- Tasks by priority -->
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-4 md:p-6 overflow-x-hidden">
           <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Tâches du jour</h3>
 
           <div v-if="isEmpty" class="py-6 text-center">
@@ -109,12 +110,12 @@
             </div>
           </div>
 
-          <div v-else>
+          <div v-else class="space-y-6">
             <!-- High priority tasks -->
             <div v-if="highPriorityTasks.length > 0" class="mb-6">
               <h4 class="text-sm font-medium text-red-600 dark:text-red-400 mb-2 flex items-center">
-                <ExclamationCircleIcon class="h-4 w-4 mr-1" />
-                Priorité haute
+                <ExclamationCircleIcon class="h-4 w-4 mr-1 flex-shrink-0" />
+                <span>Priorité haute</span>
               </h4>
               <ul class="space-y-2">
                 <TaskItem
@@ -124,6 +125,7 @@
                   @toggle-completion="toggleTaskCompletion"
                   @edit="editTask"
                   @delete="deleteTask"
+                  class="w-full"
                 />
               </ul>
             </div>
@@ -131,8 +133,8 @@
             <!-- Medium priority tasks -->
             <div v-if="mediumPriorityTasks.length > 0" class="mb-6">
               <h4 class="text-sm font-medium text-yellow-600 dark:text-yellow-400 mb-2 flex items-center">
-                <ExclamationIcon class="h-4 w-4 mr-1" />
-                Priorité moyenne
+                <ExclamationIcon class="h-4 w-4 mr-1 flex-shrink-0" />
+                <span>Priorité moyenne</span>
               </h4>
               <ul class="space-y-2">
                 <TaskItem
@@ -142,6 +144,7 @@
                   @toggle-completion="toggleTaskCompletion"
                   @edit="editTask"
                   @delete="deleteTask"
+                  class="w-full"
                 />
               </ul>
             </div>
@@ -149,8 +152,8 @@
             <!-- Low priority tasks -->
             <div v-if="lowPriorityTasks.length > 0">
               <h4 class="text-sm font-medium text-blue-600 dark:text-blue-400 mb-2 flex items-center">
-                <MinusCircleIcon class="h-4 w-4 mr-1" />
-                Priorité basse
+                <MinusCircleIcon class="h-4 w-4 mr-1 flex-shrink-0" />
+                <span>Priorité basse</span>
               </h4>
               <ul class="space-y-2">
                 <TaskItem
@@ -160,6 +163,7 @@
                   @toggle-completion="toggleTaskCompletion"
                   @edit="editTask"
                   @delete="deleteTask"
+                  class="w-full"
                 />
               </ul>
             </div>
@@ -167,8 +171,8 @@
         </div>
 
         <!-- Daily reflection section -->
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mt-6">
-          <div class="flex items-center justify-between mb-4">
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-4 md:p-6 mt-6 overflow-x-hidden">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <h3 class="text-lg font-medium text-gray-900 dark:text-white">Réflexion du jour</h3>
             <MoodEmoji v-model="moodRating" />
           </div>
@@ -327,6 +331,7 @@
     </TransitionRoot>
   </DashboardLayout>
 </template>
+
 
 <script lang="ts" setup>
 import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
@@ -693,3 +698,49 @@ watch(() => dailyPlanner.value?.tasks, () => {
   }
 }, { deep: true });
 </script>
+
+
+<style scoped>
+/* Empêcher le défilement horizontal sur tout le composant */
+:deep(body),
+:deep(html) {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Styles pour assurer que le contenu ne déborde pas horizontalement */
+.overflow-x-hidden {
+  overflow-x: hidden;
+}
+
+/* Assurer que les boutons ne forcent pas de défilement horizontal */
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+/* Ajustements pour les petits écrans */
+@media screen and (max-width: 640px) {
+  .mx-auto {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Réduire le padding sur mobile */
+  .px-4 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* S'assurer que les boutons s'adaptent correctement */
+  .flex-wrap {
+    margin-top: 0.5rem;
+  }
+
+  /* Ajuster le texte des boutons pour qu'il ne déborde pas */
+  button {
+    max-width: 100%;
+    white-space: nowrap;
+  }
+}
+</style>

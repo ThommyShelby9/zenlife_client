@@ -7,21 +7,6 @@ export interface NotificationPreferences {
   messages: boolean;
 }
 
-export interface Notification {
-  id: string;
-  type: string;
-  content: string;
-  link?: string;
-  createdAt: string;
-  read: boolean;
-  readAt?: string;
-  // Données additionnelles spécifiques au type de notification
-  sender?: UserInfo;
-  friendship?: FriendshipInfo;
-  // Autres propriétés possibles
-  [key: string]: any;
-}
-
 export interface UserInfo {
   id: string;
   fullName: string;
@@ -37,6 +22,34 @@ export interface FriendshipInfo {
   acceptedAt?: string;
 }
 
+
+// Constantes pour les types de notification liés aux amitiés
+// @/types/notification.ts
+
+export interface Notification {
+  id: string;
+  type: string;
+  content: string;
+  link?: string;
+  createdAt: string;
+  read: boolean;
+  readAt?: string;
+  sender?: {
+    id: string;
+    fullName: string;
+    username?: string;
+    profilePictureUrl?: string;
+  };
+  friendship?: {
+    id: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    acceptedAt?: string;
+  };
+  [key: string]: any;
+}
+
 export interface NotificationPayload {
   type: string;
   content: string;
@@ -46,15 +59,12 @@ export interface NotificationPayload {
   };
 }
 
-// Constantes pour les types de notification liés aux amitiés
+// Types de notification constants
 export const NotificationType = {
   FRIEND_REQUEST: 'FRIEND_REQUEST',
   FRIEND_ACCEPTED: 'FRIEND_ACCEPTED',
-  FRIEND_REJECTED: 'FRIEND_REJECTED',
-  FRIEND_REMOVED: 'FRIEND_REMOVED',
-  FRIEND_BLOCKED: 'FRIEND_BLOCKED',
-  FRIEND_UNBLOCKED: 'FRIEND_UNBLOCKED',
-  // Autres types existants...
+  NEW_MESSAGE: 'NEW_MESSAGE',
+  NEW_VOICE_NOTE: 'NEW_VOICE_NOTE',
   WATER_REMINDER: 'WATER_REMINDER',
   WATER_PROGRESS: 'WATER_PROGRESS',
   REMINDER: 'reminder',
@@ -62,5 +72,5 @@ export const NotificationType = {
   INFO: 'info',
   SUCCESS: 'success',
   WARNING: 'warning',
-  ERROR: 'error'
-};
+  ERROR: 'error',
+}
