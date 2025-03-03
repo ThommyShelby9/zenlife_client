@@ -1,83 +1,148 @@
 <template>
-  <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 p-4 shadow-lg rounded-t-lg z-50 transform transition-transform" :class="{ 'translate-y-0': show, 'translate-y-full': !show }">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center">
-        <img src="/public/img/logo.png" alt="ZenLife" class="w-12 h-12 mr-3">
-        <div>
-          <h3 class="font-semibold text-lg dark:text-white">Installer ZenLife</h3>
-          <p class="text-sm text-gray-600 dark:text-gray-300">Accès rapide et expérience optimisée</p>
-        </div>
-      </div>
-      <div class="flex">
-        <button @click="close" class="mr-2 px-4 py-2 text-gray-500 dark:text-gray-400">
-          Plus tard
-        </button>
-        <button @click="install" class="px-4 py-2 bg-indigo-600 text-white rounded-lg">
-          Installer
-        </button>
-      </div>
-    </div>
+  <div class="min-h-screen" :class="{ 'dark': isDarkMode }">
+    <RouterView />
+    <!-- Utiliser un seul composant d'installation, pas les deux en même temps -->
+    <InstallButton
+      v-if="showInstallButton"
+      :deferred-prompt="deferredInstallPrompt"
+      @close="hideInstallPrompt"
+    />
   </div>
 </template>
-<script setup lang="ts">
-import { ref, onMounted } from 'vue';
 
-// Définir une interface qui étend Navigator pour inclure la propriété standalone
+<script lang="ts" setup>
+import { RouterView } from 'vue-router';
+import { ref, onMounted, watch } from 'vue';
+import { useUserStore } from '@/stores/user';
+import { useChatStore } from '@/stores/chat';
+import { useNotificationStore } from '@/stores/notification';
+import websocketService from '@/services/websocketService';
+import InstallButton from './components/InstallButton.vue';
+
+// Définir des interfaces pour les propriétés non-standard
+interface ExtendedWindow extends Window {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  MSStream?: any;
+}
+
 interface SafariNavigator extends Navigator {
   standalone?: boolean;
 }
 
-const props = defineProps({
-  deferredPrompt: {
-    type: Object,
-    default: null
-  }
-});
+const userStore = useUserStore();
+const chatStore = useChatStore();
+const notificationStore = useNotificationStore();
+const isDarkMode = ref(false);
 
-const emit = defineEmits(['close', 'installed']);
+// Gestion PWA améliorée
+const showInstallButton = ref(false);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const deferredInstallPrompt = ref<any>(null);
 
-const show = ref(false);
+const hideInstallPrompt = () => {
+  showInstallButton.value = false;
+};
+
+// Fonction pour détecter iOS de manière sécurisée avec TypeScript
+function detectIOS(): boolean {
+  const userAgent = navigator.userAgent;
+  const extWindow = window as ExtendedWindow;
+  return /iPad|iPhone|iPod/.test(userAgent) && !extWindow.MSStream;
+}
 
 onMounted(() => {
-  // Cast navigator avec notre interface étendue
-  const safariNavigator = window.navigator as SafariNavigator;
-
-  // Utiliser la propriété typée
-  const isInstalled = window.matchMedia('(display-mode: standalone)').matches ||
-                      safariNavigator.standalone === true;
-
-  // Le reste reste inchangé
-  if (!isInstalled && props.deferredPrompt) {
-    setTimeout(() => {
-      show.value = true;
-    }, 3000);
+  // Check user's theme preference
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    isDarkMode.value = true;
+    document.documentElement.classList.add('dark');
   }
 
-  window.addEventListener('appinstalled', () => {
-    show.value = false;
-    emit('installed');
-    console.log('PWA was installed');
+  // PWA installation event listener - avec logs de débogage
+  console.log('Setting up beforeinstallprompt listener');
+  window.addEventListener('beforeinstallprompt', (e) => {
+    console.log('beforeinstallprompt event captured!', e);
+    e.preventDefault();
+    deferredInstallPrompt.value = e;
+    showInstallButton.value = true;
   });
+
+  // Vérifier aussi si on est sur iOS
+  const isIOS = detectIOS();
+  const safariNavigator = navigator as SafariNavigator;
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                       safariNavigator.standalone;
+
+  // Sur iOS, afficher le bouton d'installation sans attendre l'événement
+  if (isIOS && !isStandalone) {
+    console.log('iOS detected, showing install button');
+    showInstallButton.value = true;
+  }
+
+  // Détecter si l'app est déjà installée
+  if (window.matchMedia('(display-mode: standalone)').matches) {
+    console.log('App already installed (standalone mode)');
+  }
+
+  // Load user if token exists
+  const token = localStorage.getItem('token');
+  if (token) {
+    userStore.fetchCurrentUser().then(() => {
+      // Initialize WebSocket connection
+      initializeWebSockets();
+    });
+  }
 });
 
-const install = async () => {
-  if (!props.deferredPrompt) return;
-
-  props.deferredPrompt.prompt();
-
-  const choiceResult = await props.deferredPrompt.userChoice;
-
-  if (choiceResult.outcome === 'accepted') {
-    console.log('User accepted the install prompt');
+// Watch for theme changes
+watch(() => userStore.user?.themePreference, (newTheme) => {
+  if (newTheme === 'dark') {
+    isDarkMode.value = true;
+    document.documentElement.classList.add('dark');
   } else {
-    console.log('User dismissed the install prompt');
+    isDarkMode.value = false;
+    document.documentElement.classList.remove('dark');
   }
+});
 
-  close();
-};
+// Watch for auth state changes
+watch(() => userStore.user, (newUser) => {
+  if (newUser) {
+    // User logged in, initialize WebSockets
+    initializeWebSockets();
+  } else {
+    // User logged out, disconnect WebSockets
+    websocketService.disconnect();
+  }
+});
 
-const close = () => {
-  show.value = false;
-  emit('close');
+// Initialize WebSocket connections
+const initializeWebSockets = () => {
+  if (userStore.user) {
+    // Initialize the WebSocket connection using the service
+    websocketService.init();
+
+    // Initialize store listeners
+    chatStore.initializeWebSocket();
+    notificationStore.initializeNotificationWebSocket();
+  }
 };
 </script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-family: 'Inter', sans-serif;
+}
+
+.dark {
+  color-scheme: dark;
+}
+</style>
