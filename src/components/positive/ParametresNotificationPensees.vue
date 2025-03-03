@@ -87,10 +87,15 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
 import { Switch } from '@headlessui/vue';
 import { ExclamationIcon } from '@heroicons/vue/solid';
+
+// Définir une interface qui étend Navigator pour inclure la propriété standalone
+interface SafariNavigator extends Navigator {
+  standalone?: boolean;
+}
 
 const props = defineProps({
   modelValue: {
@@ -163,7 +168,9 @@ const verifierInstallationPwa = () => {
   }
 
   // Méthode 2: Vérifier pour iOS "Ajouter à l'écran d'accueil"
-  if (window.navigator.standalone === true) {
+  // Cast navigator en SafariNavigator pour accéder à la propriété standalone
+  const safariNavigator = window.navigator as SafariNavigator;
+  if (safariNavigator.standalone === true) {
     isPwaInstalled.value = true;
     return;
   }
