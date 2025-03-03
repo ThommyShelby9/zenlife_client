@@ -3,6 +3,8 @@
     <RouterView />
     <!-- Install PWA prompt component -->
     <PwaInstallPrompt v-if="showInstallPrompt" @close="hideInstallPrompt" />
+    <InstallButton />
+
   </div>
 </template>
 
@@ -14,6 +16,7 @@ import { useUserStore } from '@/stores/user';
 import { useChatStore } from '@/stores/chat';
 import { useNotificationStore } from '@/stores/notification';
 import websocketService from '@/services/websocketService';
+import InstallButton from './components/InstallButton.vue';
 
 const userStore = useUserStore();
 const chatStore = useChatStore();
