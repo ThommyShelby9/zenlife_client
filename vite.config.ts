@@ -20,10 +20,16 @@ export default defineConfig({
         categories: ['health', 'lifestyle'],
         icons: [
           {
-            src: 'img/logo-512x512-maskable.png',
+            src: 'img/logo-512x512.png', // Icône standard
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'any'
+          },
+          {
+            src: 'img/logo-512x512-maskable.png', // Icône avec plus de padding
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
           }
         ],
         screenshots: [
@@ -54,9 +60,10 @@ export default defineConfig({
           }
         ]
       },
-      // Utiliser registerType au lieu de strategies
       registerType: 'autoUpdate',
-      // Configuration workbox compatible
+      injectManifest: {
+        injectionPoint: undefined
+      },
       workbox: {
         runtimeCaching: [
           {
