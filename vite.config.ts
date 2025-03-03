@@ -20,10 +20,37 @@ export default defineConfig({
         categories: ['health', 'lifestyle'],
         icons: [
           {
-            src: 'img/logo.png',
+            src: 'img/logo-512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
+          }
+        ],
+        screenshots: [
+          // Mobile - Seulement 2 captures essentielles
+          {
+            src: 'screenshots/mobile-home.png',
+            sizes: '390x844',
+            type: 'image/png'
+          },
+          {
+            src: 'screenshots/mobile-dash.png',
+            sizes: '390x844',
+            type: 'image/png'
+          },
+
+          // Desktop - Seulement 2 captures essentielles
+          {
+            src: 'screenshots/desktop-home.png',
+            sizes: '1280x720',
+            type: 'image/png',
+            form_factor: 'wide'
+          },
+          {
+            src: 'screenshots/desktop-dash.png',
+            sizes: '1280x720',
+            type: 'image/png',
+            form_factor: 'wide'
           }
         ]
       },
