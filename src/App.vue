@@ -22,6 +22,7 @@ const isDarkMode = ref(false);
 const showInstallPrompt = ref(false);
 
 // PWA installation logic
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
 let deferredPrompt: any = null;
 const hideInstallPrompt = () => {
   showInstallPrompt.value = false;

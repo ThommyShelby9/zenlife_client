@@ -3,80 +3,67 @@ import vue from '@vitejs/plugin-vue';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
-// https://vitejs.dev/config/
+
 export default defineConfig({
   plugins: [
     vue(),
     VitePWA({
-      registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt', 'img/**/*'],
       manifest: {
         name: 'ZenLife',
         short_name: 'ZenLife',
-        description: 'Une application tout-en-un pour prendre soin de soi et gérer son quotidien',
+        description: 'Une application tout-en-un pour prendre soin de soi',
         theme_color: '#4f46e5',
         background_color: '#ffffff',
         display: 'standalone',
+        orientation: 'portrait',
+        categories: ['health', 'lifestyle'],
         icons: [
           {
-            src: 'img/icons/android-chrome-192x192.png',
-            sizes: '192x192',
-            type: 'image/png',
-          },
-          {
-            src: 'img/icons/android-chrome-512x512.png',
+            src: 'img/logo.png',
             sizes: '512x512',
             type: 'image/png',
-          },
-          {
-            src: 'img/icons/apple-touch-icon.png',
-            sizes: '180x180',
-            type: 'image/png',
-            purpose: 'apple-touch-icon',
-          },
-          {
-            src: 'img/icons/maskable-icon.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'maskable',
-          },
-        ],
+            purpose: 'any maskable'
+          }
+        ]
       },
+      // Utiliser registerType au lieu de strategies
+      registerType: 'autoUpdate',
+      // Configuration workbox compatible
       workbox: {
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst',
+            urlPattern: /^https:\/\/zenlife-api\.onrender\.com\/api\/.*/i,
+            handler: 'NetworkFirst',
             options: {
-              cacheName: 'google-fonts-cache',
+              cacheName: 'api-cache',
               expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 // 1 day
               },
+              networkTimeoutSeconds: 10,
               cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
+                statuses: [0, 200]
+              }
+            }
           },
           {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-            handler: 'CacheFirst',
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif)$/,
+            handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'gstatic-fonts-cache',
+              cacheName: 'images-cache',
               expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-        ],
-      },
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+              }
+            }
+          }
+        ]
+        // Retirez la propriété backgroundSync qui n'est pas supportée
+      }
     }),
   ],
-  // Ajouter cette définition pour résoudre l'erreur SockJS
+  // Le reste de votre configuration reste inchangé
   define: {
     global: 'window',
   },
@@ -93,5 +80,4 @@ export default defineConfig({
       },
     },
   },
-
 });

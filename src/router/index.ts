@@ -6,7 +6,8 @@ const LoginView = () => import('@/views/auth/LoginView.vue');
 const RegisterView = () => import('@/views/auth/RegisterView.vue');
 const ForgotPasswordView = () => import('@/views/auth/ForgotPasswordView.vue');
 const ResetPasswordView = () => import('@/views/auth/ResetPasswordView.vue');
-const DashboardView = () => import('@/views/dashboard/DashboardView.vue');
+// router/index.ts
+const DashboardView = () => import(/* webpackPrefetch: true */ '@/views/dashboard/DashboardView.vue');
 const ProfileView = () => import('@/views/profile/ProfileView.vue');
 const SettingsView = () => import('@/views/profile/SettingsView.vue');
 const WaterTrackerView = () => import('@/views/water/WaterTrackerView.vue');
