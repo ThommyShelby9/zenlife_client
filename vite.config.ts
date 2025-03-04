@@ -3,7 +3,6 @@ import vue from '@vitejs/plugin-vue';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
-
 export default defineConfig({
   plugins: [
     vue(),
@@ -14,7 +13,7 @@ export default defineConfig({
         short_name: 'ZenLife',
         description: 'Une application tout-en-un pour prendre soin de soi',
         theme_color: '#4f46e5',
-        background_color: '#ffffff',
+        background_color: '#172554', // Changé pour un bleu nuit (blue-950)
         display: 'standalone',
         orientation: 'portrait',
         categories: ['health', 'lifestyle'],
@@ -73,7 +72,7 @@ export default defineConfig({
               cacheName: 'api-cache',
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 // 1 day
+                maxAgeSeconds: 60 * 60 * 24 // 1 jour
               },
               networkTimeoutSeconds: 10,
               cacheableResponse: {
@@ -88,7 +87,7 @@ export default defineConfig({
               cacheName: 'images-cache',
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 jours
               }
             }
           }
