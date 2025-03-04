@@ -1187,7 +1187,7 @@
       </p>
       <p class="text-center text-sm mt-2">
         <span class="text-gray-500 dark:text-gray-400">Conçu et développé par </span>
-        <a href="https://linkedin.com/in/rostel-missimawu" target="_blank" class="text-primary-600 dark:text-primary-400 hover:underline font-medium">
+        <a href="https://www.linkedin.com/in/rostel-panoumassi-6b6608335/" target="_blank" class="text-primary-600 dark:text-primary-400 hover:underline font-medium">
           Rostel Missimawu
         </a>
         <span class="text-gray-500 dark:text-gray-400"> | Développeur Full Stack</span>
