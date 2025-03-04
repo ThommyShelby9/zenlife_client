@@ -127,119 +127,171 @@
               </div>
 
               <!-- Notifications settings -->
-              <div v-if="activeSection === 'notifications'">
-                <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-6">Notifications</h2>
+<div v-if="activeSection === 'notifications'" class="animate-fadeIn">
+  <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-6 flex items-center">
+    <BellIcon class="h-5 w-5 mr-2 text-primary-600" />
+    Notifications
+  </h2>
 
-                <div class="space-y-6">
-                  <div>
-                    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">Préférences de notification</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                      Personnalisez les notifications que vous souhaitez recevoir.
-                    </p>
-                    <div class="mt-3 space-y-3">
-                      <div class="flex items-center justify-between">
-                        <div>
-                          <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">Tâches à faire</h4>
-                          <p class="text-xs text-gray-500 dark:text-gray-400">
-                            Notifications pour les rappels de tâches quotidiennes
-                          </p>
-                        </div>
-                        <Switch
-                          v-model="notifications.tasks"
-                          :class="notifications.tasks ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-600'"
-                          class="relative inline-flex h-6 w-11 items-center rounded-full"
-                        >
-                          <span class="sr-only">Activer les notifications de tâches</span>
-                          <span
-                            :class="notifications.tasks ? 'translate-x-6' : 'translate-x-1'"
-                            class="inline-block h-4 w-4 transform rounded-full bg-white transition"
-                          />
-                        </Switch>
-                      </div>
+  <div class="space-y-6">
+    <!-- Notification Push principale -->
+    <div class="bg-gray-50 dark:bg-gray-800/60 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+      <h3 class="text-sm font-medium text-gray-800 dark:text-gray-200 mb-3">Notifications push</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+        Autorisez ZenLife à vous envoyer des notifications même lorsque l'application est fermée.
+      </p>
 
-                      <div class="flex items-center justify-between">
-                        <div>
-                          <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">Rappels d'hydratation</h4>
-                          <p class="text-xs text-gray-500 dark:text-gray-400">
-                            Rappels pour boire de l'eau régulièrement
-                          </p>
-                        </div>
-                        <Switch
-                          v-model="notifications.water"
-                          :class="notifications.water ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-600'"
-                          class="relative inline-flex h-6 w-11 items-center rounded-full"
-                        >
-                          <span class="sr-only">Activer les rappels d'hydratation</span>
-                          <span
-                            :class="notifications.water ? 'translate-x-6' : 'translate-x-1'"
-                            class="inline-block h-4 w-4 transform rounded-full bg-white transition"
-                          />
-                        </Switch>
-                      </div>
+      <NotificationToggle class="mt-2" />
+    </div>
 
-                      <div class="flex items-center justify-between">
-                        <div>
-                          <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">Pensées positives</h4>
-                          <p class="text-xs text-gray-500 dark:text-gray-400">
-                            Notifications de pensées positives quotidiennes
-                          </p>
-                        </div>
-                        <Switch
-                          v-model="notifications.positiveThoughts"
-                          :class="notifications.positiveThoughts ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-600'"
-                          class="relative inline-flex h-6 w-11 items-center rounded-full"
-                        >
-                          <span class="sr-only">Activer les pensées positives</span>
-                          <span
-                            :class="notifications.positiveThoughts ? 'translate-x-6' : 'translate-x-1'"
-                            class="inline-block h-4 w-4 transform rounded-full bg-white transition"
-                          />
-                        </Switch>
-                      </div>
+    <!-- Préférences par type -->
+    <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+      <div class="px-4 py-3 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">Types de notifications</h3>
+        <p class="text-xs text-gray-500 dark:text-gray-400">
+          Personnalisez les catégories de notifications que vous souhaitez recevoir.
+        </p>
+      </div>
 
-                      <div class="flex items-center justify-between">
-                        <div>
-                          <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">Alertes budgétaires</h4>
-                          <p class="text-xs text-gray-500 dark:text-gray-400">
-                            Alertes lorsque vous approchez de vos limites budgétaires
-                          </p>
-                        </div>
-                        <Switch
-                          v-model="notifications.budget"
-                          :class="notifications.budget ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-600'"
-                          class="relative inline-flex h-6 w-11 items-center rounded-full"
-                        >
-                          <span class="sr-only">Activer les alertes budgétaires</span>
-                          <span
-                            :class="notifications.budget ? 'translate-x-6' : 'translate-x-1'"
-                            class="inline-block h-4 w-4 transform rounded-full bg-white transition"
-                          />
-                        </Switch>
-                      </div>
+      <div class="divide-y divide-gray-200 dark:divide-gray-700">
+        <!-- Tâches -->
+        <div class="px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/70 transition-colors">
+          <div class="flex items-start">
+            <div class="flex-shrink-0 mt-0.5">
+              <ClipboardCheckIcon class="h-5 w-5 text-blue-500" />
+            </div>
+            <div class="ml-3">
+              <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">Tâches à faire</h4>
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                Rappels pour vos tâches quotidiennes
+              </p>
+            </div>
+          </div>
+          <Switch
+            v-model="notifications.tasks"
+            :class="notifications.tasks ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-600'"
+            class="relative inline-flex h-6 w-11 items-center rounded-full"
+          >
+            <span class="sr-only">Activer les notifications de tâches</span>
+            <span
+              :class="notifications.tasks ? 'translate-x-6' : 'translate-x-1'"
+              class="inline-block h-4 w-4 transform rounded-full bg-white transition"
+            />
+          </Switch>
+        </div>
 
-                      <div class="flex items-center justify-between">
-                        <div>
-                          <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">Messages</h4>
-                          <p class="text-xs text-gray-500 dark:text-gray-400">
-                            Notifications pour les nouveaux messages
-                          </p>
-                        </div>
-                        <Switch
-                          v-model="notifications.messages"
-                          :class="notifications.messages ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-600'"
-                          class="relative inline-flex h-6 w-11 items-center rounded-full"
-                        >
-                          <span class="sr-only">Activer les notifications de messages</span>
-                          <span
-                            :class="notifications.messages ? 'translate-x-6' : 'translate-x-1'"
-                            class="inline-block h-4 w-4 transform rounded-full bg-white transition"
-                          />
-                        </Switch>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        <!-- Hydratation -->
+        <div class="px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/70 transition-colors">
+          <div class="flex items-start">
+            <div class="flex-shrink-0 mt-0.5">
+              <DropletIcon class="h-5 w-5 text-blue-400" />
+            </div>
+            <div class="ml-3">
+              <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">Rappels d'hydratation</h4>
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                Rappels pour boire de l'eau régulièrement
+              </p>
+            </div>
+          </div>
+          <Switch
+            v-model="notifications.water"
+            :class="notifications.water ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-600'"
+            class="relative inline-flex h-6 w-11 items-center rounded-full"
+          >
+            <span class="sr-only">Activer les rappels d'hydratation</span>
+            <span
+              :class="notifications.water ? 'translate-x-6' : 'translate-x-1'"
+              class="inline-block h-4 w-4 transform rounded-full bg-white transition"
+            />
+          </Switch>
+        </div>
+
+        <!-- Pensées positives -->
+        <div class="px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/70 transition-colors">
+          <div class="flex items-start">
+            <div class="flex-shrink-0 mt-0.5">
+              <SunIcon class="h-5 w-5 text-yellow-500" />
+            </div>
+            <div class="ml-3">
+              <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">Pensées positives</h4>
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                Notifications de pensées positives quotidiennes
+              </p>
+            </div>
+          </div>
+          <Switch
+            v-model="notifications.positiveThoughts"
+            :class="notifications.positiveThoughts ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-600'"
+            class="relative inline-flex h-6 w-11 items-center rounded-full"
+          >
+            <span class="sr-only">Activer les pensées positives</span>
+            <span
+              :class="notifications.positiveThoughts ? 'translate-x-6' : 'translate-x-1'"
+              class="inline-block h-4 w-4 transform rounded-full bg-white transition"
+            />
+          </Switch>
+        </div>
+
+        <!-- Alertes budgétaires -->
+        <div class="px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/70 transition-colors">
+          <div class="flex items-start">
+            <div class="flex-shrink-0 mt-0.5">
+              <CurrencyDollarIcon class="h-5 w-5 text-green-500" />
+            </div>
+            <div class="ml-3">
+              <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">Alertes budgétaires</h4>
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                Alertes lorsque vous approchez de vos limites budgétaires
+              </p>
+            </div>
+          </div>
+          <Switch
+            v-model="notifications.budget"
+            :class="notifications.budget ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-600'"
+            class="relative inline-flex h-6 w-11 items-center rounded-full"
+          >
+            <span class="sr-only">Activer les alertes budgétaires</span>
+            <span
+              :class="notifications.budget ? 'translate-x-6' : 'translate-x-1'"
+              class="inline-block h-4 w-4 transform rounded-full bg-white transition"
+            />
+          </Switch>
+        </div>
+
+        <!-- Messages -->
+        <div class="px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/70 transition-colors">
+          <div class="flex items-start">
+            <div class="flex-shrink-0 mt-0.5">
+              <ChatAltIcon class="h-5 w-5 text-purple-500" />
+            </div>
+            <div class="ml-3">
+              <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">Messages</h4>
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                Notifications pour les nouveaux messages
+              </p>
+            </div>
+          </div>
+          <Switch
+            v-model="notifications.messages"
+            :class="notifications.messages ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-600'"
+            class="relative inline-flex h-6 w-11 items-center rounded-full"
+          >
+            <span class="sr-only">Activer les notifications de messages</span>
+            <span
+              :class="notifications.messages ? 'translate-x-6' : 'translate-x-1'"
+              class="inline-block h-4 w-4 transform rounded-full bg-white transition"
+            />
+          </Switch>
+        </div>
+      </div>
+    </div>
+
+    <!-- Information de confidentialité -->
+    <div class="mt-4 text-xs text-gray-500 dark:text-gray-400 italic">
+      <p>Les notifications peuvent contenir des données personnelles et apparaître sur votre écran de verrouillage. Vous pouvez modifier vos paramètres de confidentialité dans les réglages de votre appareil.</p>
+    </div>
+  </div>
+</div>
 
               <!-- Privacy settings -->
               <div v-if="activeSection === 'privacy'">
@@ -504,6 +556,8 @@ import {
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 import { useUserStore } from '@/stores/user';
 import { useAuthStore } from '@/stores/auth';
+import NotificationToggle from '@/components/setting/NotificationToggle.vue';
+
 
 // Stores and composables
 const userStore = useUserStore();

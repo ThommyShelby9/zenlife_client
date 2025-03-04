@@ -18,21 +18,14 @@
           <div class="md:flex">
             <div class="md:w-1/3 p-6 flex flex-col items-center border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700">
               <div class="relative group">
-                <img
-  v-if="user?.profilePictureUrl"
-  :src="getFullImageUrl(user.profilePictureUrl)"
-  alt="Photo de profil"
-  class="inline-block h-32 w-32 rounded-full object-cover"
-  @error="handleImageError"
-/>
-                <div
-                  v-else
-                  class="h-32 w-32 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center"
-                >
-                  <span class="text-3xl font-medium text-primary-800 dark:text-primary-200">
-                    {{ userInitials }}
-                  </span>
-                </div>
+                <UserAvatar
+      :imageUrl="user?.profilePictureUrl"
+      :initials="userInitials"
+      size="2xl"
+      :editable="true"
+      @edit="openProfilePictureUpload"
+      @error="handleImageError"
+    />
                 <div
                   class="absolute inset-0 rounded-full bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
                   @click="openProfilePictureUpload"
@@ -401,6 +394,7 @@ import type { User } from '@/types/auth';
 import { usePlannerStore } from '@/stores/planner';
 import { useFinanceStore } from '@/stores/finance';
 import { useSocialStore } from '@/stores/social';
+import UserAvatar from '@/components/common/UserAvatar.vue';
 
 
 // Initialisation des stores
@@ -469,13 +463,40 @@ const openProfilePictureUpload = () => {
   }
 };
 
+const imageLoading = ref(false);
 const handleProfilePictureUpload = async (event: Event) => {
   const target = event.target as HTMLInputElement;
   const file = target.files?.[0];
   if (!file) return;
 
+  // Vérifier le type de fichier
+  if (!file.type.startsWith('image/')) {
+    toast.error('Veuillez sélectionner une image valide');
+    return;
+  }
+
+  // Vérifier la taille (max 5 MB)
+  const maxSize = 5 * 1024 * 1024; // 5 MB
+  if (file.size > maxSize) {
+    toast.error('L\'image est trop volumineuse (max 5 MB)');
+    return;
+  }
+
+  // Réinitialiser l'état d'erreur d'image
+  imageError.value = false;
+  imageLoading.value = true;
+
   try {
+    // Afficher un toast pour informer que l'upload est en cours
+    const toastId = toast.info('Upload de votre photo de profil en cours...', {
+      timeout: false,
+      closeOnClick: false
+    });
+
     const response = await fileApi.uploadProfilePicture(file);
+
+    // Supprimer le toast d'info
+    toast.dismiss(toastId);
 
     // Mise à jour du store
     if (userStore.user) {
@@ -489,6 +510,9 @@ const handleProfilePictureUpload = async (event: Event) => {
   } catch (error) {
     console.error('Error uploading profile picture:', error);
     toast.error('Erreur lors de la mise à jour de la photo de profil');
+
+    // En cas d'erreur, forcer l'affichage des initiales
+    imageError.value = true;
   } finally {
     // Reset file input
     if (target) {

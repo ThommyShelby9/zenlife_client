@@ -260,7 +260,7 @@ import type { Expense } from '@/types/finance';
 import type { WaterProgressData } from '@/types/waterReminder';
 import type { DailyPlanner } from '@/types/planner';
 import type { FinancialSummary } from '@/types/finance';
-import { formatCurrency, formatMonthYear } from '@/utils/formatters';
+import { formatCurrency } from '@/utils/formatters';
 
 
 
@@ -321,6 +321,7 @@ const positiveThought = ref<PositiveThought>({
 const formatDate = (date: string) => {
   try {
     return format(new Date(date), 'dd MMM yyyy', { locale: fr });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     return date;
   }
@@ -336,6 +337,7 @@ const getTodayDate = () => {
 
 // Get category icon
 const getCategoryIcon = (categoryName: string) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const iconMap: { [key: string]: any } = {
     'Alimentation': ShoppingBagIcon,
     'Logement': HomeIcon,
@@ -375,6 +377,7 @@ const refreshPositiveThought = async () => {
 };
 
 // Toggle task status
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const toggleTaskStatus = async (task: any) => {
   try {
     task.completed = !task.completed;

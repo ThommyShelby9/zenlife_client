@@ -7,21 +7,13 @@
     @click="$emit('click')"
   >
     <div class="relative">
-      <img
-      v-if="contact?.profilePictureUrl"
-      :src="getFullImageUrl(contact.profilePictureUrl)"
-      alt="Photo de profil"
-      class="inline-block h-10 w-10 rounded-full object-cover"
-      @error="handleImageErrore"
-    />
-      <div
-        v-else
-        class="h-10 w-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center"
-      >
-        <span class="text-primary-800 dark:text-primary-200 font-medium">
-          {{ getInitials(contact.fullName) }}
-        </span>
-      </div>
+      <UserAvatar
+        :imageUrl="contact?.profilePictureUrl"
+        :initials="getInitials(contact?.fullName || '')"
+        size="md"
+        alt="Photo de profil"
+        @error="handleImageErrore"
+      />
       <div
         v-if="contact.online"
         class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 border-2 border-white dark:border-gray-800"
@@ -86,6 +78,7 @@ const userStore = useUserStore();
 const imageError = ref(false); // Ajoutez cette ligne pour déclarer la variable manquante
 
 // Cette fonction construit l'URL complète de l'image
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const getFullImageUrl = (url: string): string => {
   // Si l'URL commence déjà par http, la retourner telle quelle
   if (url.startsWith('http')) {

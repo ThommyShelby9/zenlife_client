@@ -62,20 +62,13 @@
               <div class="flex items-center justify-between">
                 <div class="flex items-center">
                   <div class="flex-shrink-0">
-                    <img
-                      v-if="request.sender.profilePictureUrl"
-                      :src="request.sender.profilePictureUrl"
+                    <UserAvatar
+                      :imageUrl="request.sender.profilePictureUrl"
+                      :initials="getInitials(request.sender.fullName || '')"
+                      size="lg"
                       alt="Profile"
-                      class="h-12 w-12 rounded-full"
+                      @error="handleImageError"
                     />
-                    <div
-                      v-else
-                      class="h-12 w-12 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center"
-                    >
-                      <span class="text-primary-800 dark:text-primary-200 font-medium">
-                        {{ getInitials(request.sender.fullName) }}
-                      </span>
-                    </div>
                   </div>
                   <div class="ml-4">
                     <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ request.sender.fullName }}</h3>
@@ -136,21 +129,13 @@
               <div class="flex items-center justify-between">
                 <div class="flex items-center">
                   <div class="flex-shrink-0">
-                    <img
-      v-if="request.recipient?.profilePictureUrl"
-      :src="getFullImageUrl(request.recipient.profilePictureUrl)"
-      alt="Photo de profil"
-      class="inline-block h-12 w-12 rounded-full"
-      @error="handleImageError"
-    />
-                    <div
-                      v-else
-                      class="h-12 w-12 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center"
-                    >
-                      <span class="text-primary-800 dark:text-primary-200 font-medium">
-                        {{ getInitials(request.recipient.fullName) }}
-                      </span>
-                    </div>
+                    <UserAvatar
+                      :imageUrl="request.recipient?.profilePictureUrl"
+                      :initials="getInitials(request.recipient?.fullName || '')"
+                      size="lg"
+                      alt="Photo de profil"
+                      @error="handleImageError"
+                    />
                   </div>
                   <div class="ml-4">
                     <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ request.recipient.fullName }}</h3>
@@ -219,6 +204,7 @@ import {
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 import { useSocialStore } from '@/stores/social.ts';
 import type { FriendRequest } from '@/types/social.ts';
+import UserAvatar from '@/components/common/UserAvatar.vue';
 
 // Store and composables
 const socialStore = useSocialStore();
@@ -273,6 +259,7 @@ const formatTimestamp = (timestamp: string): string => {
 const imageError = ref(false); // Ajoutez cette ligne pour déclarer la variable manquante
 
 // Cette fonction construit l'URL complète de l'image
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const getFullImageUrl = (url: string): string => {
   // Si l'URL commence déjà par http, la retourner telle quelle
   if (url.startsWith('http')) {

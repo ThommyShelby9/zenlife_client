@@ -127,11 +127,13 @@ const chartOptions = computed(() => {
       },
       tooltip: {
         callbacks: {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           label: function(context: any) {
             const label = context.dataset.label || '';
             const value = context.parsed.y;
             return `${label}: ${value} ml`;
           },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           afterLabel: function(context: any) {
             if (context.datasetIndex === 0) {
               const dayIndex = context.dataIndex;

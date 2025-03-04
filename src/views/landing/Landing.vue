@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div class="bg-white dark:bg-gray-900 min-h-screen">
     <!-- Barre de navigation -->

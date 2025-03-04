@@ -286,6 +286,7 @@ const handleRegister = async () => {
 
     // Redirect to login
     router.push('/auth/login');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('Registration error:', error);
 

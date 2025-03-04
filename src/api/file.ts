@@ -51,13 +51,21 @@ export const fileApi = {
   },
 
   /**
-   * Upload profile picture
+   * Upload d'une image de profil
+   * @param file Le fichier image à uploader
+   * @returns Promise avec la réponse contenant l'URL Cloudinary
    */
-  uploadProfilePicture: (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
+  uploadProfilePicture: (file: File | FormData) => {
+    // S'assurer que le fichier est dans un FormData
+    let formData: FormData;
+    if (file instanceof File) {
+      formData = new FormData();
+      formData.append('file', file);
+    } else {
+      formData = file;
+    }
 
-    return apiClient.post('/files/profile-picture', formData, {
+    return apiClient.post('/users/profile/picture', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }

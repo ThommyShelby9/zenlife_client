@@ -88,21 +88,13 @@
                 <ArrowLeftIcon class="h-5 w-5" />
               </button>
 
-              <img
-      v-if="activeContact?.profilePictureUrl"
-      :src="getFullImageUrl(activeContact.profilePictureUrl)"
-      alt="Photo de profil"
-      class="inline-block h-10 w-10 rounded-full"
-      @error="handleImageErrore"
-    />
-              <div
-                v-else
-                class="h-10 w-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center"
-              >
-                <span class="text-primary-800 dark:text-primary-200 font-medium">
-                  {{ getInitials(activeContact?.fullName || '') }}
-                </span>
-              </div>
+              <UserAvatar
+  :imageUrl="activeContact?.profilePictureUrl"
+  :initials="getInitials(activeContact?.fullName || '')"
+  size="md"
+  alt="Photo de profil"
+  @error="handleImageErrore"
+/>
               <div class="ml-3">
                 <p class="text-sm font-medium text-gray-900 dark:text-white">
                   {{ activeContact?.fullName }}
@@ -359,6 +351,7 @@ import type {
   ChatMessagePayload,
   Message,
 } from '@/types/chat';
+import UserAvatar from '@/components/common/UserAvatar.vue';
 
 // ---------- STORES ET COMPOSABLES ----------
 const chatStore = useChatStore();
@@ -433,6 +426,7 @@ const isSentByMe = (message: Message): boolean => {
 const imageError = ref(false); // Ajoutez cette ligne pour déclarer la variable manquante
 
 // Cette fonction construit l'URL complète de l'image
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const getFullImageUrl = (url: string): string => {
   // Si l'URL commence déjà par http, la retourner telle quelle
   if (url.startsWith('http')) {

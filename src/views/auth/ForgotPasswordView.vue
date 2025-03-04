@@ -117,6 +117,7 @@ const handleSubmit = async () => {
 
     // Show success
     emailSent.value = true;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('Password reset request error:', error);
 

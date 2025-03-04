@@ -9,10 +9,11 @@ import 'vue-toastification/dist/index.css';
 // Dans main.ts
 import { initServiceWorker } from './registerServiceWorker';
 import 'animate.css';
+import './firebase/config'; // Cette ligne importe et initialise Firebase
 
 // Toast options
 const toastOptions: PluginOptions = {
-  position: POSITION.TOP_RIGHT, 
+  position: POSITION.TOP_RIGHT,
   timeout: 5000,
   closeOnClick: true,
   pauseOnFocusLoss: true,
