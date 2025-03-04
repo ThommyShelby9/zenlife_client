@@ -1,8 +1,10 @@
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
     <div class="sm:mx-auto sm:w-full sm:max-w-md">
-      <img class="mx-auto h-24 w-auto" src="@/assets/img/logo.png" alt="ZenLife" />
-      <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+      <a href="/" class="flex justify-center">
+    <img class="h-16 w-auto" src="@/assets/img/logo.png" alt="ZenLife" />
+  </a>
+        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
         Vérification de votre email
       </h2>
     </div>
@@ -133,10 +135,12 @@ const verifyEmail = async () => {
       } else {
         throw new Error('Réponse inattendue du serveur');
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (apiError: any) {
       console.error('Erreur spécifique à l\'appel API:', apiError);
       throw apiError; // Propager l'erreur au bloc catch principal
     }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     console.error('Erreur de vérification:', err);
 

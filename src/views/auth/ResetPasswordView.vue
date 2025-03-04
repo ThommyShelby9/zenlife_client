@@ -1,8 +1,10 @@
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
     <div class="sm:mx-auto sm:w-full sm:max-w-md">
-      <img class="mx-auto h-24 w-auto" src="@/assets/img/logo.png" alt="ZenLife" />
-      <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">Réinitialisation du mot de passe</h2>
+      <a href="/" class="flex justify-center">
+    <img class="h-16 w-auto" src="@/assets/img/logo.png" alt="ZenLife" />
+  </a>
+        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">Réinitialisation du mot de passe</h2>
       <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
         Veuillez définir votre nouveau mot de passe
       </p>
@@ -224,6 +226,7 @@ const handleSubmit = async () => {
     // Show success
     resetSuccess.value = true;
     toast.success('Votre mot de passe a été réinitialisé avec succès');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('Password reset error:', error);
 

@@ -102,7 +102,9 @@
       <div class="flex-1 flex flex-col min-h-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
         <div class="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
           <div class="flex justify-center items-center px-4">
-    <img class="h-12 w-auto" src="@/assets/img/logo.png" alt="ZenLife" />
+            <a href="/" class="flex justify-center">
+    <img class="h-16 w-auto" src="@/assets/img/logo.png" alt="ZenLife" />
+  </a>
   </div>
   <div class="text-center py-3 border-t border-gray-200 dark:border-gray-700">
   <span class="font-fancy text-xl text-primary-600 dark:text-primary-400">ZenLife</span>
