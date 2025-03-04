@@ -13,7 +13,7 @@ export default defineConfig({
         short_name: 'ZenLife',
         description: 'Une application tout-en-un pour prendre soin de soi',
         theme_color: '#4f46e5',
-        background_color: '#172554', // Changé pour un bleu nuit (blue-950)
+        background_color: '#000000', // Changé pour noir pur
         display: 'standalone',
         orientation: 'portrait',
         categories: ['health', 'lifestyle'],
