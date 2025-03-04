@@ -1102,7 +1102,7 @@
 </div>
 
   <!-- Footer moderne -->
-<footer class="bg-white dark:bg-gray-800">
+  <footer class="bg-white dark:bg-gray-800">
   <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
     <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
       <!-- Logo & description -->
@@ -1184,6 +1184,13 @@
     <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
       <p class="text-center text-base text-gray-500 dark:text-gray-400">
         &copy; 2025 ZenLife, Inc. Tous droits réservés.
+      </p>
+      <p class="text-center text-sm mt-2">
+        <span class="text-gray-500 dark:text-gray-400">Conçu et développé par </span>
+        <a href="https://linkedin.com/in/rostel-missimawu" target="_blank" class="text-primary-600 dark:text-primary-400 hover:underline font-medium">
+          Rostel Missimawu
+        </a>
+        <span class="text-gray-500 dark:text-gray-400"> | Développeur Full Stack</span>
       </p>
     </div>
   </div>
