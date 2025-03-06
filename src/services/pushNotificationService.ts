@@ -75,18 +75,30 @@ export class PushNotificationService {
   // Demander la permission et s'abonner
   public async requestPermissionAndSubscribe(): Promise<boolean> {
     try {
+      // Vérifier d'abord le statut actuel des permissions
+      if (Notification.permission === "granted") {
+        console.log("Permissions déjà accordées");
+        return await this.subscribe();
+      }
+      else if (Notification.permission === "denied") {
+        console.warn("Les permissions de notifications ont été bloquées");
+        this.toast.warning(
+          'Les notifications sont bloquées par votre navigateur. Veuillez modifier les paramètres de votre navigateur pour permettre les notifications.',
+          { timeout: 8000 }
+        );
+        localStorage.setItem(this.localStorageKey, 'false');
+        return false;
+      }
+
+      // Demander la permission si elle n'a pas été accordée ou refusée
       const permission = await Notification.requestPermission();
 
       if (permission === 'granted') {
         const success = await this.subscribe();
-
-        // Sauvegarder l'état dans localStorage
         localStorage.setItem(this.localStorageKey, success ? 'true' : 'false');
-
         return success;
       } else {
         localStorage.setItem(this.localStorageKey, 'false');
-
         this.toast.warning(
           'Les notifications sont désactivées. Vous ne recevrez pas de rappels lorsque l\'application est fermée.',
           { timeout: 8000 }

@@ -30,6 +30,16 @@ const toastOptions: PluginOptions = {
   newestOnTop: true
 };
 
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/firebase-messaging-sw.js')
+    .then(registration => {
+      console.log('Service Worker enregistré avec succès:', registration);
+    })
+    .catch(error => {
+      console.error('Erreur lors de l"enregistrement du Service Worker:', error);
+    });
+}
+
 const app = createApp(App);
 
 app.use(createPinia());
