@@ -89,12 +89,12 @@
               </button>
 
               <UserAvatar
-  :imageUrl="activeContact?.profilePictureUrl"
-  :initials="getInitials(activeContact?.fullName || '')"
-  size="md"
-  alt="Photo de profil"
-  @error="handleImageErrore"
-/>
+                :imageUrl="activeContact?.profilePictureUrl"
+                :initials="getInitials(activeContact?.fullName || '')"
+                size="md"
+                alt="Photo de profil"
+                @error="handleImageErrore"
+              />
               <div class="ml-3">
                 <p class="text-sm font-medium text-gray-900 dark:text-white">
                   {{ activeContact?.fullName }}
@@ -157,73 +157,124 @@
 
                 <!-- Message container with flexbox -->
                 <div
-                  class="w-full flex"
-                  :class="isSentByMe(message) ? 'justify-end' : 'justify-start'"
+                  class="relative"
+                  @contextmenu.prevent="showMessageOptions(message, $event)"
+                  @long-touch="showMessageOptions(message, $event)"
                 >
-                  <div class="flex flex-col max-w-[85%] md:max-w-[70%]">
-                    <!-- Message bubble -->
-                    <div
-                      v-if="message.content && message.content.trim() !== ''"
-                      class="p-3 rounded-lg shadow-sm"
-                      :class="[
-                        isSentByMe(message) ?
-                          'message-sent bg-primary-500 text-white rounded-br-none' :
-                          'message-received bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 rounded-bl-none'
-                      ]"
-                    >
-                      <p class="text-sm break-words">{{ message.content }}</p>
+                  <!-- Message bubble avec les fonctionnalités de swipe/glissement -->
+                  <div
+                    class="w-full flex"
+                    :class="isSentByMe(message) ? 'justify-end' : 'justify-start'"
+                    @touchstart="startSwipe($event, message)"
+                    @touchmove="moveSwipe($event)"
+                    @touchend="endSwipe($event, message)"
+                  >
+                    <!-- Action de réponse qui apparaît lors du swipe -->
+                    <div v-if="swiping && swipingMessageId === message.id" class="flex items-center mr-2">
+                      <button
+                        class="p-2 rounded-full bg-gray-200 dark:bg-gray-700"
+                        @click="setReplyToMessage(message)"
+                      >
+                        <ReplyIcon class="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                      </button>
                     </div>
 
-                    <!-- Message attachments if any -->
-                    <div v-if="message.attachments && message.attachments.length > 0" class="mt-1 space-y-1">
+                    <div class="flex flex-col max-w-[85%] md:max-w-[70%]">
+                      <!-- Section de réponse si ce message répond à un autre -->
                       <div
-                        v-for="attachment in message.attachments"
-                        :key="attachment.id"
-                        class="rounded-lg overflow-hidden"
+                        v-if="message.replyTo"
+                        class="p-2 rounded-t-lg text-xs border-l-2 border-primary-500 bg-gray-100 dark:bg-gray-700 mt-1 mb-0"
                       >
-                        <!-- Image attachment -->
-                        <img
-                          v-if="isImageAttachment(attachment.filename || '')"
-                          :src="getAttachmentUrl(attachment)"
-                          alt="Image"
-                          class="max-w-full object-cover cursor-pointer rounded shadow-sm"
-                          @click="() => openAttachment(attachment)"
-                          @error="handleImageError"
-                        />
+                        <p class="font-semibold">Réponse à {{ message.replyTo.senderName }}</p>
+                        <p class="truncate">{{ message.replyTo.content }}</p>
+                      </div>
 
-                        <!-- Other file attachments -->
+                      <!-- Message bubble -->
+                      <div
+                        v-if="message.content && message.content.trim() !== ''"
+                        class="p-3 rounded-lg shadow-sm"
+                        :class="[
+                          isSentByMe(message) ?
+                            'message-sent bg-primary-500 text-white rounded-br-none' :
+                            'message-received bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 rounded-bl-none'
+                        ]"
+                      >
+                        <p class="text-sm break-words">{{ message.content }}</p>
+                      </div>
+
+                      <!-- Message attachments if any -->
+                      <div v-if="message.attachments && message.attachments.length > 0" class="mt-1 space-y-1">
                         <div
-                          v-else
-                          class="flex items-center bg-white dark:bg-gray-800 p-2 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer shadow-sm mt-1"
-                          :class="[
-                            isSentByMe(message) ? 'ml-auto' : 'mr-auto'
-                          ]"
-                          @click="() => openAttachment(attachment)"
+                          v-for="attachment in message.attachments"
+                          :key="attachment.id"
+                          class="rounded-lg overflow-hidden"
                         >
-                          <DocumentIcon class="h-6 w-6 text-gray-500 dark:text-gray-400" />
-                          <div class="ml-2">
-                            <p class="text-sm text-gray-900 dark:text-white truncate max-w-[150px]">
-                              {{ attachment.originalFilename || attachment.filename }}
-                            </p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">
-                              {{ formatFileSize(attachment.size || attachment.fileSize || 0) }}
-                            </p>
+                          <!-- Image attachment -->
+                          <img
+  v-if="isImageAttachment(attachment.filename || '')"
+  :src="getAttachmentUrl(attachment)"
+  alt="Image"
+  class="max-w-[300px] max-h-[250px] object-cover cursor-pointer rounded shadow-sm"
+  @click="() => openAttachment(attachment)"
+  @error="handleImageError"
+/>
+
+                          <!-- Audio attachment (note vocale) -->
+                          <div v-else-if="isVoiceNote(attachment)" class="flex items-center p-2 bg-gray-100 dark:bg-gray-700 rounded-lg mt-1">
+                            <button
+                              @click="toggleAudioPlayback(attachment)"
+                              class="p-2 rounded-full bg-primary-500 text-white mr-2"
+                            >
+                              <component :is="isPlaying(attachment.id) ? PauseIcon : PlayIcon" class="h-4 w-4" />
+                            </button>
+                            <div class="flex-1">
+                              <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
+                                <div
+                                  class="bg-primary-500 h-1.5 rounded-full"
+                                  :style="{ width: getAudioProgress(attachment.id) + '%' }"
+                                ></div>
+                              </div>
+                              <div class="flex justify-between text-xs mt-1">
+                                <span>{{ formatAudioTime(getCurrentTime(attachment.id)) }}</span>
+                                <span>{{ formatAudioTime(attachment.durationSeconds || 0) }}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Other file attachments -->
+                          <div
+                            v-else
+                            class="flex items-center bg-white dark:bg-gray-800 p-2 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer shadow-sm mt-1"
+                            :class="[
+                              isSentByMe(message) ? 'ml-auto' : 'mr-auto'
+                            ]"
+                            @click="() => openAttachment(attachment)"
+                          >
+                            <DocumentIcon class="h-6 w-6 text-gray-500 dark:text-gray-400" />
+                            <div class="ml-2">
+                              <p class="text-sm text-gray-900 dark:text-white truncate max-w-[150px]">
+                                {{ attachment.originalFilename || attachment.filename }}
+                              </p>
+                              <p class="text-xs text-gray-500 dark:text-gray-400">
+                                {{ formatFileSize(attachment.size || attachment.fileSize || 0) }}
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    <!-- Message timestamp -->
-                    <div
-                      class="text-xs mt-1"
-                      :class="isSentByMe(message) ?
-                        'text-right text-gray-500 dark:text-gray-400' :
-                        'text-left text-gray-500 dark:text-gray-400'"
-                    >
-                      {{ formatMessageTime(message.timestamp) }}
-                      <span v-if="message.read && isSentByMe(message)" class="ml-1 text-primary-500">
-                        ✓
-                      </span>
+                      <!-- Message timestamp -->
+                      <div
+                        class="text-xs mt-1"
+                        :class="isSentByMe(message) ?
+                          'text-right text-gray-500 dark:text-gray-400' :
+                          'text-left text-gray-500 dark:text-gray-400'"
+                      >
+                        {{ formatMessageTime(message.timestamp) }}
+                        <span v-if="message.read && isSentByMe(message)" class="ml-1 text-primary-500">
+                          ✓
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -233,6 +284,47 @@
 
           <!-- Message input area -->
           <div class="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+            <!-- Afficher le message auquel on répond -->
+            <div
+              v-if="replyToMessage"
+              class="bg-gray-100 dark:bg-gray-700 p-2 mb-2 rounded-md flex justify-between items-start"
+            >
+              <div class="flex-1">
+                <p class="text-xs font-medium">Réponse à {{ replyToMessage.sender.fullName }}</p>
+                <p class="text-sm truncate">{{ replyToMessage.content }}</p>
+              </div>
+              <button @click="cancelReply" class="p-1 text-gray-500">
+                <XIcon class="h-4 w-4" />
+              </button>
+            </div>
+
+            <!-- Interface d'enregistrement audio -->
+            <div v-if="isRecording" class="flex items-center justify-between mb-2 p-2 bg-red-50 dark:bg-red-900/20 rounded-md">
+              <div class="flex items-center">
+                <div class="animate-pulse mr-2">
+                  <MicrophoneIcon class="h-5 w-5 text-red-500" />
+                </div>
+                <div>
+                  <p class="text-sm font-medium">Enregistrement en cours</p>
+                  <p class="text-xs">{{ recordingDuration }}</p>
+                </div>
+              </div>
+              <div class="flex space-x-2">
+                <button
+                  @click="cancelRecording"
+                  class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                >
+                  <XIcon class="h-5 w-5" />
+                </button>
+                <button
+                  @click="stopRecording"
+                  class="p-2 rounded-full bg-red-500 text-white"
+                >
+                  <StopIcon class="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
             <div class="relative">
               <textarea
                 v-model="newMessage"
@@ -244,6 +336,16 @@
                 @keydown.enter.prevent="sendMessage"
               ></textarea>
               <div class="absolute right-2 bottom-2 flex space-x-1">
+                <!-- Bouton de note vocale -->
+                <button
+                  v-if="!isRecording"
+                  @click="startRecording"
+                  class="p-1.5 rounded-full text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none"
+                  aria-label="Enregistrer une note vocale"
+                >
+                  <MicrophoneIcon class="h-5 w-5" />
+                </button>
+
                 <button
                   @click="toggleEmojiPicker"
                   class="p-1.5 rounded-full text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none emoji-button"
@@ -316,6 +418,28 @@
           />
         </template>
       </div>
+
+      <!-- Menu contextuel pour les messages -->
+      <div
+        v-if="showMessageMenu"
+        class="fixed z-50"
+        :style="{
+          top: messageMenuPosition.y + 'px',
+          left: messageMenuPosition.x + 'px'
+        }"
+      >
+        <div class="bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700">
+          <button
+            @click="() => { activeMessageForMenu && setReplyToMessage(activeMessageForMenu); showMessageMenu = false; }"
+            class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            <div class="flex items-center">
+              <ReplyIcon class="h-4 w-4 mr-2" />
+              Répondre
+            </div>
+          </button>
+        </div>
+      </div>
     </div>
   </DashboardLayout>
 </template>
@@ -340,6 +464,11 @@ import {
   XIcon,
   ArrowLeftIcon,
   EmojiHappyIcon,
+  ReplyIcon,
+  MicrophoneIcon,
+  StopIcon,
+  PlayIcon,
+  PauseIcon
 } from '@heroicons/vue/outline';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 import ChatContactItem from '@/components/chat/ChatContactItem.vue';
@@ -388,6 +517,32 @@ const emojiList = [
   '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😤',
   '👍', '👎', '❤️', '👏', '🔥', '🎉', '✅', '⭐', '🌟', '💯'
 ];
+
+// Gestion des réponses
+const replyToMessage = ref<Message | null>(null);
+const showMessageMenu = ref(false);
+const messageMenuPosition = ref({ x: 0, y: 0 });
+const activeMessageForMenu = ref<Message | null>(null);
+
+// Pour le swipe sur mobile
+const swiping = ref(false);
+const swipeStartX = ref(0);
+const swipingMessageId = ref<string | null>(null);
+const SWIPE_THRESHOLD = 80; // Pixels à swiper pour déclencher l'action
+
+// Pour l'enregistrement audio
+const isRecording = ref(false);
+const recordingDuration = ref('00:00');
+const recordingTimer = ref<number | null>(null);
+const recordingStartTime = ref<number>(0);
+const mediaRecorder = ref<MediaRecorder | null>(null);
+const audioChunks = ref<BlobPart[]>([]);
+
+// Pour la lecture audio
+const audioPlayers = ref<Record<string, HTMLAudioElement>>({});
+const playingAudioId = ref<string | null>(null);
+const audioProgress = ref<Record<string, number>>({});
+const audioCurrentTime = ref<Record<string, number>>({});
 
 // ---------- COMPUTED PROPERTIES ----------
 const currentUserId = computed(() => userStore.user?.id || '');
@@ -584,6 +739,261 @@ const addEmoji = (emoji: string): void => {
   }
 };
 
+// ---------- GESTION DES RÉPONSES ----------
+/**
+ * Configuration d'une réponse à un message
+ */
+const setReplyToMessage = (message: Message) => {
+  replyToMessage.value = message;
+  // Focus sur le textarea pour répondre immédiatement
+  if (messageInput.value) {
+    messageInput.value.focus();
+  }
+  // Fermer le menu contextuel si ouvert
+  showMessageMenu.value = false;
+};
+
+/**
+ * Annule la réponse
+ */
+const cancelReply = () => {
+  replyToMessage.value = null;
+};
+
+/**
+ * Affiche le menu contextuel pour un message
+ */
+const showMessageOptions = (message: Message, event: MouseEvent | TouchEvent) => {
+  // Positionner le menu à l'emplacement du clic/toucher
+  if (event instanceof MouseEvent) {
+    messageMenuPosition.value = { x: event.clientX, y: event.clientY };
+  } else {
+    // Pour les événements tactiles, utiliser la première touche
+    const touch = event.touches[0] || event.changedTouches[0];
+    messageMenuPosition.value = { x: touch.clientX, y: touch.clientY };
+  }
+
+  activeMessageForMenu.value = message;
+  showMessageMenu.value = true;
+
+  // Fermer le menu après un clic ailleurs
+  const closeMenu = () => {
+    showMessageMenu.value = false;
+    document.removeEventListener('click', closeMenu);
+  };
+
+  // Attendre le prochain tick pour ajouter l'écouteur
+  setTimeout(() => {
+    document.addEventListener('click', closeMenu);
+  }, 0);
+};
+
+/**
+ * Fonctions pour le swipe sur mobile
+ */
+const startSwipe = (event: TouchEvent, message: Message) => {
+  const touch = event.touches[0];
+  swipeStartX.value = touch.clientX;
+  swipingMessageId.value = message.id;
+};
+
+const moveSwipe = (event: TouchEvent) => {
+  if (!swipingMessageId.value) return;
+
+  const touch = event.touches[0];
+  const currentX = touch.clientX;
+  const diff = currentX - swipeStartX.value;
+
+  // Si on swipe assez vers la droite (pour les deux côtés)
+  if (Math.abs(diff) > SWIPE_THRESHOLD) {
+    swiping.value = true;
+  } else {
+    swiping.value = false;
+  }
+};
+
+const endSwipe = (event: TouchEvent, message: Message) => {
+  if (swiping.value && swipingMessageId.value === message.id) {
+    setReplyToMessage(message);
+  }
+
+  // Réinitialiser les états
+  swiping.value = false;
+  swipingMessageId.value = null;
+};
+
+// ---------- GESTION DES NOTES VOCALES ----------
+/**
+ * Démarre l'enregistrement d'une note vocale
+ */
+const startRecording = async () => {
+  try {
+    // Demander l'autorisation d'utiliser le microphone
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    // Créer l'enregistreur
+    mediaRecorder.value = new MediaRecorder(stream);
+    audioChunks.value = [];
+
+    // Écouter l'événement de données disponibles
+    mediaRecorder.value.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        audioChunks.value.push(event.data);
+      }
+    };
+
+    // Lorsque l'enregistrement est terminé
+    mediaRecorder.value.onstop = () => {
+      // Créer un blob audio
+      const audioBlob = new Blob(audioChunks.value, { type: 'audio/webm' });
+
+      // Créer un fichier à partir du blob
+      const audioFile = new File(
+        [audioBlob],
+        `voice-note-${Date.now()}.webm`,
+        { type: 'audio/webm' }
+      );
+
+      // Ajouter la note vocale aux fichiers sélectionnés
+      selectedFiles.value.push(audioFile);
+
+      // Arrêter le flux audio
+      stream.getTracks().forEach(track => track.stop());
+
+      // Réinitialiser l'interface
+      isRecording.value = false;
+      if (recordingTimer.value) {
+        clearInterval(recordingTimer.value);
+        recordingTimer.value = null;
+      }
+    };
+
+    // Démarrer l'enregistrement
+    mediaRecorder.value.start();
+    isRecording.value = true;
+    recordingStartTime.value = Date.now();
+
+    // Mettre à jour la durée d'enregistrement
+    recordingTimer.value = window.setInterval(() => {
+      const elapsed = Math.floor((Date.now() - recordingStartTime.value) / 1000);
+      const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+      const seconds = (elapsed % 60).toString().padStart(2, '0');
+      recordingDuration.value = `${minutes}:${seconds}`;
+    }, 1000);
+  } catch (error) {
+    console.error('Erreur lors de l\'accès au microphone:', error);
+    toast.error('Impossible d\'accéder au microphone');
+  }
+};
+
+const stopRecording = () => {
+  if (mediaRecorder.value && mediaRecorder.value.state !== 'inactive') {
+    mediaRecorder.value.stop();
+  }
+};
+
+const cancelRecording = () => {
+  if (mediaRecorder.value && mediaRecorder.value.state !== 'inactive') {
+    mediaRecorder.value.stop();
+    audioChunks.value = []; // Vider les données
+  }
+
+  isRecording.value = false;
+  if (recordingTimer.value) {
+    clearInterval(recordingTimer.value);
+    recordingTimer.value = null;
+  }
+};
+
+/**
+ * Vérifie si une pièce jointe est une note vocale
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const isVoiceNote = (attachment: any): boolean => {
+  return attachment &&
+    (attachment.contentType?.startsWith('audio/') ||
+    attachment.filename?.includes('voice-note') ||
+    attachment.durationSeconds !== undefined);
+};
+
+/**
+ * Gère la lecture/pause d'une note vocale
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const toggleAudioPlayback = (attachment: any) => {
+  const attachmentId = attachment.id;
+
+  // Si aucun lecteur audio n'existe pour cette pièce jointe, en créer un
+  if (!audioPlayers.value[attachmentId]) {
+    const audio = new Audio(getAttachmentUrl(attachment));
+
+    // Configurer les événements
+    audio.onplay = () => {
+      playingAudioId.value = attachmentId;
+    };
+
+    audio.onpause = () => {
+      if (playingAudioId.value === attachmentId) {
+        playingAudioId.value = null;
+      }
+    };
+
+    audio.onended = () => {
+      if (playingAudioId.value === attachmentId) {
+        playingAudioId.value = null;
+      }
+      // Réinitialiser la position
+      audioProgress.value[attachmentId] = 0;
+      audioCurrentTime.value[attachmentId] = 0;
+    };
+
+    audio.ontimeupdate = () => {
+      // Mettre à jour la progression
+      const duration = audio.duration || attachment.durationSeconds || 0;
+      audioProgress.value[attachmentId] = (audio.currentTime / duration) * 100;
+      audioCurrentTime.value[attachmentId] = audio.currentTime;
+    };
+
+    // Stocker le lecteur
+    audioPlayers.value[attachmentId] = audio;
+  }
+
+  // Lire ou mettre en pause l'audio
+  const audio = audioPlayers.value[attachmentId];
+
+  if (audio.paused) {
+    // Arrêter les autres audios en cours de lecture
+    if (playingAudioId.value && playingAudioId.value !== attachmentId) {
+      audioPlayers.value[playingAudioId.value].pause();
+    }
+
+    audio.play().catch(error => {
+      console.error('Erreur lors de la lecture audio:', error);
+      toast.error('Impossible de lire cette note vocale');
+    });
+  } else {
+    audio.pause();
+  }
+};
+
+const isPlaying = (attachmentId: string): boolean => {
+  return playingAudioId.value === attachmentId;
+};
+
+const getAudioProgress = (attachmentId: string): number => {
+  return audioProgress.value[attachmentId] || 0;
+};
+
+const getCurrentTime = (attachmentId: string): number => {
+  return audioCurrentTime.value[attachmentId] || 0;
+};
+
+const formatAudioTime = (seconds: number): string => {
+  const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
+  const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
+  return `${minutes}:${secs}`;
+};
+
 // ---------- GESTION DES CONVERSATIONS ----------
 /**
  * Sélectionne un contact pour démarrer ou continuer une conversation
@@ -669,6 +1079,11 @@ const sendMessage = async (): Promise<void> => {
       content: messageContent
     };
 
+    // Ajouter la référence au message si on répond à un message
+    if (replyToMessage.value && replyToMessage.value.id) {
+      payload.replyToMessageId = replyToMessage.value.id;
+    }
+
     if (selectedFiles.value.length > 0) {
       // Création d'un identifiant temporaire pour le message pour l'affichage immédiat
       const tempId = Date.now().toString();
@@ -686,8 +1101,24 @@ const sendMessage = async (): Promise<void> => {
         attachments: [],
         isFromCurrentUser: true, // Marquer explicitement comme envoyé par l'utilisateur actuel
         senderId: userStore.user?.id || '',
-        tempSide: 'right'
+        tempSide: 'right',
+        replyTo: {
+          messageId: '',
+          content: '',
+          senderId: '',
+          senderName: ''
+        }
       };
+
+      // Ajouter les informations de réponse si nécessaire
+      if (replyToMessage.value) {
+        tempMessage.replyTo = {
+          messageId: replyToMessage.value.id || '',
+          content: replyToMessage.value.content,
+          senderId: replyToMessage.value.sender?.id || '',
+          senderName: replyToMessage.value.sender?.fullName || ''
+        };
+      }
 
       // Ajouter le message temporaire à la conversation
       if (!chatStore.conversations[activeContactId.value]) {
@@ -702,6 +1133,8 @@ const sendMessage = async (): Promise<void> => {
       // Désactiver l'entrée pendant l'envoi
       newMessage.value = '';
       textareaRows.value = 1;
+      cancelReply(); // Effacer le message de réponse
+
       if (messageInput.value) {
         messageInput.value.style.height = 'auto';
       }
@@ -711,7 +1144,8 @@ const sendMessage = async (): Promise<void> => {
         await chatStore.sendMessageWithAttachments(
           activeContactId.value,
           messageContent,
-          selectedFiles.value
+          selectedFiles.value,
+          replyToMessage.value?.id // Passer l'ID du message auquel on répond
         );
 
         console.log('Message avec pièces jointes envoyé');
@@ -736,8 +1170,24 @@ const sendMessage = async (): Promise<void> => {
         read: false,
         isFromCurrentUser: true, // Marquer explicitement comme envoyé par l'utilisateur actuel
         senderId: userStore.user?.id || '',
-        tempSide: 'right'
+        tempSide: 'right',
+        replyTo: {
+          messageId: '',
+          content: '',
+          senderId: '',
+          senderName: ''
+        }
       };
+
+      // Ajouter les informations de réponse si nécessaire
+      if (replyToMessage.value) {
+        tempMessage.replyTo = {
+          messageId: replyToMessage.value.id || '',
+          content: replyToMessage.value.content,
+          senderId: replyToMessage.value.sender?.id || '',
+          senderName: replyToMessage.value.sender?.fullName || ''
+        };
+      }
 
       // Ajouter le message temporaire à la conversation
       messages.value.push(tempMessage);
@@ -749,6 +1199,8 @@ const sendMessage = async (): Promise<void> => {
       // Désactiver l'entrée pendant l'envoi
       newMessage.value = '';
       textareaRows.value = 1;
+      cancelReply(); // Effacer le message de réponse
+
       if (messageInput.value) {
         messageInput.value.style.height = 'auto';
       }
@@ -1022,6 +1474,22 @@ onBeforeUnmount(() => {
   // Suppression des écouteurs d'événements
   window.removeEventListener('resize', handleResize);
   document.removeEventListener('click', () => {});
+
+  // Arrêter l'enregistrement si en cours
+  if (mediaRecorder.value && mediaRecorder.value.state !== 'inactive') {
+    mediaRecorder.value.stop();
+  }
+
+  // Arrêter les timers
+  if (recordingTimer.value) {
+    clearInterval(recordingTimer.value);
+  }
+
+  // Arrêter et nettoyer tous les lecteurs audio
+  Object.values(audioPlayers.value).forEach(audio => {
+    audio.pause();
+    audio.src = '';
+  });
 });
 
 // ---------- WATCHERS ----------

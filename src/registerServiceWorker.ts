@@ -14,6 +14,11 @@ declare global {
   interface ServiceWorkerRegistration {
     sync?: SyncManager;
   }
+
+  interface Window {
+    __SW_UPDATE_MODAL_SHOWN: boolean;
+    showUpdateModal: () => void;
+  }
 }
 
 // Définir un type pour le toast fallback
@@ -60,10 +65,146 @@ try {
   };
 }
 
+// Variable pour suivre si le modal de mise à jour a déjà été montré
+const updateModalShown = false;
+
+// Fonction pour créer un modal de mise à jour élégant
+function createUpdateModal() {
+  // Vérifier si le modal existe déjà
+  const existingModal = document.getElementById('sw-update-modal');
+  if (existingModal) return;
+
+  // Créer le modal
+  const modalContainer = document.createElement('div');
+  modalContainer.id = 'sw-update-modal';
+  modalContainer.style.position = 'fixed';
+  modalContainer.style.zIndex = '9999';
+  modalContainer.style.left = '0';
+  modalContainer.style.top = '0';
+  modalContainer.style.width = '100%';
+  modalContainer.style.height = '100%';
+  modalContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+  modalContainer.style.display = 'flex';
+  modalContainer.style.alignItems = 'center';
+  modalContainer.style.justifyContent = 'center';
+  modalContainer.style.opacity = '0';
+  modalContainer.style.transition = 'opacity 0.3s ease';
+
+  // Le contenu du modal
+  const modalContent = document.createElement('div');
+  modalContent.style.backgroundColor = 'white';
+  modalContent.style.borderRadius = '8px';
+  modalContent.style.padding = '20px';
+  modalContent.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+  modalContent.style.width = '90%';
+  modalContent.style.maxWidth = '450px';
+  modalContent.style.transform = 'translateY(20px)';
+  modalContent.style.transition = 'transform 0.3s ease';
+
+  // Adapter le style pour le mode sombre si nécessaire
+  if (document.documentElement.classList.contains('dark')) {
+    modalContent.style.backgroundColor = '#1f2937';  // Couleur de fond sombre
+    modalContent.style.color = 'white';
+  }
+
+  // Ajouter le titre
+  const title = document.createElement('h3');
+  title.textContent = 'Mise à jour disponible';
+  title.style.fontSize = '18px';
+  title.style.fontWeight = 'bold';
+  title.style.marginBottom = '10px';
+  title.style.color = document.documentElement.classList.contains('dark') ? 'white' : '#111827';
+
+  // Ajouter le message
+  const message = document.createElement('p');
+  message.textContent = 'Une nouvelle version de l\'application est disponible. Veuillez rafraîchir la page pour appliquer les mises à jour.';
+  message.style.marginBottom = '15px';
+  message.style.fontSize = '14px';
+  message.style.lineHeight = '1.5';
+  message.style.color = document.documentElement.classList.contains('dark') ? '#d1d5db' : '#4b5563';
+
+  // Conteneur pour les boutons
+  const buttonContainer = document.createElement('div');
+  buttonContainer.style.display = 'flex';
+  buttonContainer.style.justifyContent = 'flex-end';
+  buttonContainer.style.gap = '10px';
+  buttonContainer.style.marginTop = '15px';
+
+  // Bouton pour rafraîchir
+  const refreshButton = document.createElement('button');
+  refreshButton.textContent = 'Rafraîchir maintenant';
+  refreshButton.style.backgroundColor = '#4f46e5';  // Couleur primaire
+  refreshButton.style.color = 'white';
+  refreshButton.style.padding = '8px 16px';
+  refreshButton.style.borderRadius = '6px';
+  refreshButton.style.border = 'none';
+  refreshButton.style.fontWeight = '500';
+  refreshButton.style.cursor = 'pointer';
+  refreshButton.style.transition = 'background-color 0.2s ease';
+  refreshButton.onmouseover = () => { refreshButton.style.backgroundColor = '#4338ca'; };
+  refreshButton.onmouseleave = () => { refreshButton.style.backgroundColor = '#4f46e5'; };
+
+  refreshButton.onclick = () => {
+    // Rafraîchir la page et appliquer la mise à jour
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+    }
+    window.location.reload();
+  };
+
+  // Bouton pour différer
+  const laterButton = document.createElement('button');
+  laterButton.textContent = 'Plus tard';
+  laterButton.style.padding = '8px 16px';
+  laterButton.style.borderRadius = '6px';
+  laterButton.style.backgroundColor = 'transparent';
+  laterButton.style.border = document.documentElement.classList.contains('dark') ? '1px solid #6b7280' : '1px solid #d1d5db';
+  laterButton.style.color = document.documentElement.classList.contains('dark') ? '#d1d5db' : '#4b5563';
+  laterButton.style.fontWeight = '500';
+  laterButton.style.cursor = 'pointer';
+  laterButton.onclick = () => {
+    document.body.removeChild(modalContainer);
+  };
+
+  // Assembler le modal
+  buttonContainer.appendChild(laterButton);
+  buttonContainer.appendChild(refreshButton);
+  modalContent.appendChild(title);
+  modalContent.appendChild(message);
+  modalContent.appendChild(buttonContainer);
+  modalContainer.appendChild(modalContent);
+
+  // Ajouter le modal au DOM
+  document.body.appendChild(modalContainer);
+
+  // Animation d'entrée
+  setTimeout(() => {
+    modalContainer.style.opacity = '1';
+    modalContent.style.transform = 'translateY(0)';
+  }, 10);
+
+  return modalContainer;
+}
+
+// Fonction pour montrer le modal de mise à jour
+function showUpdateModal() {
+  // Vérifier si le modal a déjà été montré
+  if (window.__SW_UPDATE_MODAL_SHOWN) return;
+
+  window.__SW_UPDATE_MODAL_SHOWN = true;
+  createUpdateModal();
+}
+
+// Exposer la fonction dans window pour pouvoir l'appeler de partout
+window.showUpdateModal = showUpdateModal;
+
 // Fonction pour enregistrer le service worker
 export function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
+      // S'assurer que le drapeau de mise à jour est réinitialisé au chargement
+      window.__SW_UPDATE_MODAL_SHOWN = false;
+
       navigator.serviceWorker.register('/sw.js')
         .then(registration => {
           console.log('Service Worker enregistré avec succès:', registration.scope);
@@ -79,12 +220,10 @@ export function registerServiceWorker() {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                   // Un nouveau service worker est disponible, mais attend d'être activé
                   console.log('Nouveau Service Worker disponible');
-                  toast.info('Une mise à jour est disponible. Rafraîchissez la page pour l\'appliquer.');
 
-                  // Option pour rafraîchir automatiquement
-                  if (confirm('Une mise à jour de l\'application est disponible. Rafraîchir maintenant?')) {
-                    newWorker.postMessage({ type: 'SKIP_WAITING' });
-                    window.location.reload();
+                  // Afficher le modal de mise à jour (une seule fois)
+                  if (!window.__SW_UPDATE_MODAL_SHOWN) {
+                    showUpdateModal();
                   }
                 }
               });
@@ -187,5 +326,6 @@ if (typeof window !== 'undefined') {
 
 export default {
   registerServiceWorker,
-  requestBackgroundSync
+  requestBackgroundSync,
+  showUpdateModal
 };

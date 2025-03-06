@@ -17,11 +17,18 @@ export interface ChatMessage {
   timestamp: string;
   read: boolean;
   attachments?: FileAttachment[];
+  replyTo?: {
+    messageId: string;
+    content: string;
+    senderId: string;
+    senderName: string;
+  };
 }
 
 export interface ChatMessagePayload {
   receiver: User | { id: string };
   content: string;
+  replyToMessageId?: string; // Ajout pour les réponses aux messages
 }
 
 export interface ChatContact {
@@ -86,6 +93,15 @@ export interface Message {
   read: boolean;
   readAt?: string;
   attachments?: FileAttachment[];
+  replyTo?: {
+    messageId: string;
+    content: string;
+    senderId: string;
+    senderName: string;
+  };
+  isFromCurrentUser?: boolean;
+  senderId?: string;
+  tempSide?: string;
 }
 
 export const useChatStore = defineStore('chat', () => {
@@ -249,8 +265,26 @@ export const useChatStore = defineStore('chat', () => {
         },
         receiver: { id: receiverId },
         timestamp: new Date().toISOString(),
-        read: false
+        read: false,
+        isFromCurrentUser: true
       };
+
+      // Ajouter les informations de réponse si nécessaire
+      if (messagePayload.replyToMessageId) {
+        // Trouver le message original dans les conversations
+        const originalMessage = conversations.value[receiverId]?.find(
+          msg => msg.id === messagePayload.replyToMessageId
+        );
+
+        if (originalMessage) {
+          newMessage.replyTo = {
+            messageId: originalMessage.id || '',
+            content: originalMessage.content,
+            senderId: originalMessage.sender?.id || '',
+            senderName: originalMessage.sender?.fullName || ''
+          };
+        }
+      }
 
       // Initialiser la conversation si nécessaire
       if (!conversations.value[receiverId]) {
@@ -277,13 +311,21 @@ export const useChatStore = defineStore('chat', () => {
   };
 
   // Dans sendMessageWithAttachments, assurez-vous que les pièces jointes sont correctement envoyées
-  const sendMessageWithAttachments = async (receiverId: string, content: string, files: File[]) => {
+  const sendMessageWithAttachments = async (receiverId: string, content: string, files: File[], replyToMessageId?: string) => {
     try {
-      // Envoyer d'abord le message texte
-      const messageResponse = await chatApi.sendMessage({
+      // Construire le payload avec les informations de réponse
+      const messagePayload: ChatMessagePayload = {
         receiver: { id: receiverId },
         content: content.trim()
-      });
+      };
+
+      // Ajouter l'ID du message auquel on répond si présent
+      if (replyToMessageId) {
+        messagePayload.replyToMessageId = replyToMessageId;
+      }
+
+      // Envoyer d'abord le message texte
+      const messageResponse = await chatApi.sendMessage(messagePayload);
 
       const messageId = messageResponse.data.messageId;
       console.log('ID du message créé:', messageId);
@@ -298,7 +340,25 @@ export const useChatStore = defineStore('chat', () => {
           // Envoyer soit comme note vocale, soit comme fichier normal
           if (file.type.startsWith('audio/')) {
             // Pour les notes vocales, calculer la durée approximative
-            const durationSeconds = Math.floor(file.size / 10000) + 2;
+            // Si le nom du fichier contient voice-note, c'est une note vocale
+            const isVoiceNote = file.name.includes('voice-note');
+
+            // Durée approximative basée sur la taille ou si des métadonnées sont disponibles
+            let durationSeconds = Math.floor(file.size / 10000) + 2;
+
+            // Si on a accès à l'API Audio pour obtenir la durée exacte
+            if (window.AudioContext && isVoiceNote) {
+              try {
+                const audioContext = new AudioContext();
+                const arrayBuffer = await file.arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                durationSeconds = Math.ceil(audioBuffer.duration);
+                audioContext.close();
+              } catch (audioError) {
+                console.warn('Impossible de déterminer la durée exacte de l\'audio:', audioError);
+              }
+            }
+
             result = await fileApi.uploadVoiceNote(file, messageId, durationSeconds);
             console.log('Note vocale envoyée:', file.name);
           } else {
@@ -338,6 +398,7 @@ export const useChatStore = defineStore('chat', () => {
       throw error;
     }
   };
+
   const markAsRead = async (messageId: string) => {
     try {
       await chatApi.markAsRead(messageId);

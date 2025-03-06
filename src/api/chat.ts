@@ -12,10 +12,15 @@ export const chatApi = {
   /**
    * Send a chat message with attachments
    */
-  sendMessageWithAttachments: (receiver: string, content: string, files: File[]) => {
+  sendMessageWithAttachments: (receiver: string, content: string, files: File[], replyToMessageId?: string) => {
     const formData = new FormData();
     formData.append('receiver', receiver);
     formData.append('content', content);
+
+    // Ajouter replyToMessageId s'il est présent
+    if (replyToMessageId) {
+      formData.append('replyToMessageId', replyToMessageId);
+    }
 
     // Append each file to formData
     files.forEach(file => {
@@ -23,6 +28,37 @@ export const chatApi = {
     });
 
     return apiClient.post('/send/chat/with-attachments', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  },
+
+  /**
+   * Upload a voice note
+   */
+  uploadVoiceNote: (file: File, messageId: string, durationSeconds: number) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('messageId', messageId);
+    formData.append('durationSeconds', durationSeconds.toString());
+
+    return apiClient.post('/files/voice-note', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  },
+
+  /**
+   * Upload a regular file attachment
+   */
+  uploadFile: (file: File, messageId: string) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('messageId', messageId);
+
+    return apiClient.post('/files/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }

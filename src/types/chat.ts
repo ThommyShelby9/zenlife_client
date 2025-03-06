@@ -13,6 +13,7 @@ export interface ChatMessage {
 
 // types/chat.ts
 export type ChatMessagePayload = {
+  replyToMessageId?: string;
   receiver: { id: string };
   content: string;
   attachments?: Array<{
@@ -40,6 +41,7 @@ export interface ChatContact {
 
 // Types pour les pièces jointes
 export interface FileAttachment {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   url: any;
   storagePath: string;
   id: string;
@@ -82,6 +84,7 @@ export interface Contact {
 }
 
 export interface Message {
+  replyTo: { messageId: string; content: string; senderId: string; senderName: string; };
   senderId: string;
   tempSide: string;
   id: string;
