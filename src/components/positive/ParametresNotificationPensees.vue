@@ -11,19 +11,19 @@
     </div>
 
     <div class="flex items-center justify-between">
-      <label for="notif-enabled" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      <label for="notif-enabled" class="block text-base font-medium text-gray-700 dark:text-gray-300">
         Activer les notifications
       </label>
       <Switch
         v-model="isNotificationsEnabled"
         :class="isNotificationsEnabled ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-600'"
-        class="relative inline-flex h-6 w-11 items-center rounded-full"
+        class="relative inline-flex h-7 w-14 items-center rounded-full"
         :disabled="!isNotificationSupported || notificationPermission === 'denied'"
       >
         <span class="sr-only">Activer les notifications</span>
         <span
-          :class="isNotificationsEnabled ? 'translate-x-6' : 'translate-x-1'"
-          class="inline-block h-4 w-4 transform rounded-full bg-white transition"
+          :class="isNotificationsEnabled ? 'translate-x-8' : 'translate-x-1'"
+          class="inline-block h-5 w-5 transform rounded-full bg-white transition"
         />
       </Switch>
     </div>
@@ -31,14 +31,14 @@
       Recevez des notifications avec des pensées positives
     </p>
 
-    <div v-if="isNotificationsEnabled" class="mt-4">
-      <label for="frequency" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+    <div v-if="isNotificationsEnabled" class="mt-5">
+      <label for="frequency" class="block text-base font-medium text-gray-700 dark:text-gray-300">
         Fréquence des notifications
       </label>
       <select
         id="frequency"
         v-model="frequency"
-        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 py-2 pl-3 pr-10 text-base focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+        class="mt-2 block w-full rounded-md border-gray-300 dark:border-gray-700 py-3 pl-4 pr-10 text-base focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-base dark:bg-gray-700 dark:text-white"
       >
         <option value="hourly">Toutes les heures</option>
         <option value="daily">Une fois par jour</option>
@@ -46,8 +46,8 @@
       </select>
     </div>
 
-    <div v-if="isNotificationsEnabled && frequency === 'custom'" class="mt-4">
-      <label for="custom-interval" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+    <div v-if="isNotificationsEnabled && frequency === 'custom'" class="mt-5">
+      <label for="custom-interval" class="block text-base font-medium text-gray-700 dark:text-gray-300">
         Intervalle personnalisé (minutes)
       </label>
       <input
@@ -56,27 +56,27 @@
         type="number"
         min="15"
         max="1440"
-        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+        class="mt-2 block w-full rounded-md border-gray-300 dark:border-gray-700 py-3 px-4 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-base dark:bg-gray-700 dark:text-white"
       />
-      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
         Minimum 15 minutes, maximum 24 heures (1440 minutes)
       </p>
     </div>
 
-    <div v-if="isNotificationsEnabled && isPwaInstalled" class="mt-4">
+    <div v-if="isNotificationsEnabled && isPwaInstalled" class="mt-5">
       <div class="flex items-center justify-between">
-        <label for="display-on-lock" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label for="display-on-lock" class="block text-base font-medium text-gray-700 dark:text-gray-300">
           Afficher sur écran verrouillé
         </label>
         <Switch
           v-model="displayOnLockScreen"
           :class="displayOnLockScreen ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-600'"
-          class="relative inline-flex h-6 w-11 items-center rounded-full"
+          class="relative inline-flex h-7 w-14 items-center rounded-full"
         >
           <span class="sr-only">Afficher sur écran verrouillé</span>
           <span
-            :class="displayOnLockScreen ? 'translate-x-6' : 'translate-x-1'"
-            class="inline-block h-4 w-4 transform rounded-full bg-white transition"
+            :class="displayOnLockScreen ? 'translate-x-8' : 'translate-x-1'"
+            class="inline-block h-5 w-5 transform rounded-full bg-white transition"
           />
         </Switch>
       </div>

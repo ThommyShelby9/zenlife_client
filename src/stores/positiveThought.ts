@@ -31,7 +31,9 @@ export const usePositiveThoughtStore = defineStore('positiveThought', () => {
         updatedAt: response.data?.updatedAt
       };
 
-      currentThought.value = thought;
+      // Important: utilisez l'opérateur de déstructuration pour créer un nouvel objet
+      // afin de garantir que Vue détecte correctement le changement
+      currentThought.value = { ...thought };
       return thought;
     } catch (error) {
       console.error('Erreur lors de la récupération d\'une pensée aléatoire:', error);
@@ -46,18 +48,26 @@ export const usePositiveThoughtStore = defineStore('positiveThought', () => {
         updatedAt: undefined
       };
 
-      currentThought.value = defaultThought;
+      currentThought.value = { ...defaultThought };
       return defaultThought;
     } finally {
       isLoading.value = false;
     }
   };
 
+  // Méthode dédiée pour définir la pensée du jour manuellement,
+  // avec garantie de réactivité
+  const setCurrentThought = (thought: PositiveThought) => {
+    currentThought.value = { ...thought };
+    return currentThought.value;
+  };
+
   const getAllThoughts = async () => {
     isLoading.value = true;
     try {
       const response = await positiveThoughtApi.getAllThoughts();
-      allThoughts.value = response.data;
+      // Créer un nouveau tableau pour garantir la réactivité
+      allThoughts.value = [...response.data];
 
       // Extraction des catégories uniques
       const categoriesUniques = new Set<string>();
@@ -98,11 +108,12 @@ export const usePositiveThoughtStore = defineStore('positiveThought', () => {
       // Ajouter à la collection locale si succès
       const newThought = response.data.thought;
       if (newThought) {
-        allThoughts.value = [newThought, ...allThoughts.value];
+        // Utiliser la déstructuration pour une meilleure réactivité
+        allThoughts.value = [{ ...newThought }, ...allThoughts.value];
 
         // Ajouter la catégorie si nouvelle
         if (newThought.category && !categories.value.includes(newThought.category)) {
-          categories.value.push(newThought.category);
+          categories.value = [...categories.value, newThought.category];
         }
       }
 
@@ -119,7 +130,7 @@ export const usePositiveThoughtStore = defineStore('positiveThought', () => {
     isLoading.value = true;
     try {
       const response = await positiveThoughtApi.getUserSettings();
-      userSettings.value = response.data;
+      userSettings.value = { ...response.data };
       return userSettings.value;
     } catch (error) {
       console.error('Erreur lors de la récupération des paramètres utilisateur:', error);
@@ -138,7 +149,7 @@ export const usePositiveThoughtStore = defineStore('positiveThought', () => {
         updatedAt: undefined
       };
 
-      userSettings.value = defaultSettings;
+      userSettings.value = { ...defaultSettings };
       return defaultSettings;
     } finally {
       isLoading.value = false;
@@ -153,7 +164,7 @@ export const usePositiveThoughtStore = defineStore('positiveThought', () => {
 
       // Mettre à jour l'état local
       if (response.data && response.data.settings) {
-        userSettings.value = response.data.settings;
+        userSettings.value = { ...response.data.settings };
       }
 
       // Mettre à jour les abonnements aux notifications
@@ -209,7 +220,7 @@ export const usePositiveThoughtStore = defineStore('positiveThought', () => {
     if (notification.type === 'POSITIVE_THOUGHT') {
       // Mettre à jour la pensée actuelle si nécessaire
       if (notification.data?.thought) {
-        currentThought.value = notification.data.thought;
+        currentThought.value = { ...notification.data.thought };
       }
 
       // Afficher une notification visuelle
@@ -248,6 +259,7 @@ export const usePositiveThoughtStore = defineStore('positiveThought', () => {
 
     // Actions
     getRandomPositiveThought,
+    setCurrentThought,
     getAllThoughts,
     getThoughtsByCategory,
     createThought,

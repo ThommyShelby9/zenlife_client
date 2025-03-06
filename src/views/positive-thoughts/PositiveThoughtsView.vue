@@ -6,16 +6,16 @@
         <div class="flex space-x-4">
           <button
             @click="showSettingsModal = true"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            class="inline-flex items-center px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-base font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
           >
-            <CogIcon class="h-4 w-4 mr-2" />
+            <CogIcon class="h-5 w-5 mr-2" />
             Paramètres
           </button>
           <button
             @click="showAddThoughtModal = true"
-            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            class="inline-flex items-center px-4 py-2.5 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
           >
-            <PlusIcon class="h-4 w-4 mr-2" />
+            <PlusIcon class="h-5 w-5 mr-2" />
             Ajouter une pensée
           </button>
         </div>
@@ -28,10 +28,10 @@
             <h2 class="text-lg font-medium text-gray-900 dark:text-white">Votre pensée du jour</h2>
             <button
               @click="refreshThought"
-              class="inline-flex items-center px-2 py-1 text-sm text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 focus:outline-none"
+              class="inline-flex items-center px-3 py-1.5 text-base text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 focus:outline-none"
               :disabled="isRefreshing"
             >
-              <RefreshIcon :class="['h-4 w-4 mr-1', isRefreshing ? 'animate-spin' : '']" />
+              <RefreshIcon :class="['h-5 w-5 mr-1', isRefreshing ? 'animate-spin' : '']" />
               Nouvelle pensée
             </button>
           </div>
@@ -86,32 +86,85 @@
         <div class="flex justify-between items-center">
           <h2 class="text-lg font-medium text-gray-900 dark:text-white">
             {{ selectedCategory ? `Pensées - ${selectedCategory}` : 'Toutes les pensées' }}
+            <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">({{ filteredThoughts.length }} pensées)</span>
           </h2>
-          <div class="flex items-center">
-            <SearchIcon class="h-5 w-5 text-gray-400 mr-2" />
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="Rechercher..."
-              class="border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
-            />
+          <div class="flex items-center space-x-2">
+            <!-- Sélecteur de vue -->
+            <div class="flex items-center border border-gray-300 dark:border-gray-600 rounded-md">
+              <button
+                @click="viewMode = 'grid'"
+                :class="[
+                  'p-2.5 rounded-l-md',
+                  viewMode === 'grid'
+                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400'
+                    : 'text-gray-500 dark:text-gray-400'
+                ]"
+              >
+                <ViewGridIcon class="h-5 w-5" />
+              </button>
+              <button
+                @click="viewMode = 'list'"
+                :class="[
+                  'p-2.5 rounded-r-md',
+                  viewMode === 'list'
+                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400'
+                    : 'text-gray-500 dark:text-gray-400'
+                ]"
+              >
+                <ViewListIcon class="h-5 w-5" />
+              </button>
+            </div>
+
+            <!-- Barre de recherche -->
+            <div class="relative">
+              <SearchIcon class="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Rechercher..."
+                class="pl-10 pr-10 py-2.5 border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 text-base dark:bg-gray-700 dark:text-white w-64"
+              />
+              <button
+                v-if="searchQuery"
+                @click="searchQuery = ''"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <XIcon class="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </div>
-        <div class="mt-4 grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          <div v-if="filteredThoughts.length === 0" class="sm:col-span-2 lg:col-span-3 xl:col-span-4 py-8 text-center">
-            <LightBulbIcon class="mx-auto h-12 w-12 text-gray-400" />
-            <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">Aucune pensée trouvée</h3>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Essayez de modifier votre recherche ou d'ajouter une nouvelle pensée.
-            </p>
-          </div>
+
+        <!-- Message "Aucune pensée trouvée" -->
+        <div v-if="filteredThoughts.length === 0" class="py-8 text-center bg-white dark:bg-gray-800 rounded-lg shadow mt-4">
+          <LightBulbIcon class="mx-auto h-12 w-12 text-gray-400" />
+          <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">Aucune pensée trouvée</h3>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Essayez de modifier votre recherche ou d'ajouter une nouvelle pensée.
+          </p>
+          <button
+            @click="showAddThoughtModal = true"
+            class="mt-4 inline-flex items-center px-4 py-2.5 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          >
+            <PlusIcon class="h-5 w-5 mr-2" />
+            Ajouter une pensée
+          </button>
+        </div>
+
+        <!-- Affichage en grille -->
+        <div v-else-if="viewMode === 'grid'" class="mt-4 grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           <div
-            v-for="thought in filteredThoughts"
+            v-for="thought in paginatedThoughts"
             :key="thought.id"
             class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-200"
           >
-            <div class="px-4 py-5 sm:p-6">
-              <blockquote class="relative">
+            <div class="relative px-4 py-5 sm:p-6">
+              <!-- Badge de catégorie -->
+              <span v-if="thought.category" class="absolute top-2 right-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-300">
+                {{ thought.category }}
+              </span>
+
+              <blockquote class="relative mt-4">
                 <p class="text-base font-medium text-gray-900 dark:text-white line-clamp-4">
                   {{ thought.content }}
                 </p>
@@ -120,9 +173,6 @@
                     <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
                       {{ thought.author || 'Anonyme' }}
                     </p>
-                    <p v-if="thought.category" class="text-xs text-gray-500 dark:text-gray-400">
-                      {{ thought.category }}
-                    </p>
                   </div>
                 </footer>
               </blockquote>
@@ -130,12 +180,89 @@
             <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 flex justify-end">
               <button
                 @click="setAsDailyThought(thought)"
-                class="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300 text-sm font-medium"
+                class="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300 text-base font-medium"
               >
                 Définir comme pensée du jour
               </button>
             </div>
           </div>
+        </div>
+
+        <!-- Affichage en liste -->
+        <div v-else class="mt-4 bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+          <ul role="list" class="divide-y divide-gray-200 dark:divide-gray-700">
+            <li
+              v-for="thought in paginatedThoughts"
+              :key="thought.id"
+              class="px-4 py-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
+            >
+              <div class="flex items-start justify-between">
+                <div class="min-w-0 flex-1">
+                  <p class="text-base font-medium text-gray-900 dark:text-white truncate">
+                    {{ thought.content }}
+                  </p>
+                  <div class="mt-2 flex items-center">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                      <span class="font-medium text-gray-700 dark:text-gray-300">{{ thought.author || 'Anonyme' }}</span>
+                      <span v-if="thought.category" class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-300">
+                        {{ thought.category }}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <button
+                  @click="setAsDailyThought(thought)"
+                  class="ml-4 flex-shrink-0 text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300 text-base font-medium"
+                >
+                  Définir comme pensée du jour
+                </button>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Pagination -->
+        <div v-if="filteredThoughts.length > itemsPerPage" class="mt-6 flex justify-center">
+          <nav class="inline-flex shadow-sm -space-x-px" aria-label="Pagination">
+            <button
+              @click="currentPage = Math.max(1, currentPage - 1)"
+              :disabled="currentPage === 1"
+              class="relative inline-flex items-center px-3 py-2.5 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-base font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+            >
+              <span class="sr-only">Précédent</span>
+              <ChevronLeftIcon class="h-5 w-5" />
+            </button>
+
+            <template v-for="pageNumber in displayedPages" :key="pageNumber">
+              <button
+                v-if="pageNumber === '...'"
+                class="relative inline-flex items-center px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300"
+              >
+                ...
+              </button>
+              <button
+                v-else
+                @click="typeof pageNumber === 'number' && (currentPage = pageNumber)"
+                :class="[
+                  currentPage === pageNumber
+                    ? 'bg-primary-50 dark:bg-primary-900 border-primary-500 text-primary-600 dark:text-primary-300'
+                    : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700',
+                  'relative inline-flex items-center px-4 py-2.5 border text-base font-medium'
+                ]"
+              >
+                {{ pageNumber }}
+              </button>
+            </template>
+
+            <button
+              @click="currentPage = Math.min(totalPages, currentPage + 1)"
+              :disabled="currentPage === totalPages"
+              class="relative inline-flex items-center px-3 py-2.5 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-base font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+            >
+              <span class="sr-only">Suivant</span>
+              <ChevronRightIcon class="h-5 w-5" />
+            </button>
+          </nav>
         </div>
       </div>
     </div>
@@ -179,19 +306,19 @@
 
                   <!-- Section des catégories préférées -->
                   <div>
-                    <label for="categories" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <label for="categories" class="block text-base font-medium text-gray-700 dark:text-gray-300">
                       Catégories préférées
                     </label>
-                    <div class="mt-2 space-y-2">
+                    <div class="mt-3 space-y-3">
                       <div v-for="category in allCategories" :key="category" class="flex items-center">
                         <input
                           :id="`category-${category}`"
                           v-model="selectedCategories"
                           :value="category"
                           type="checkbox"
-                          class="h-4 w-4 rounded border-gray-300 dark:border-gray-700 text-primary-600 focus:ring-primary-500 dark:bg-gray-700"
+                          class="h-5 w-5 rounded border-gray-300 dark:border-gray-700 text-primary-600 focus:ring-primary-500 dark:bg-gray-700"
                         />
-                        <label :for="`category-${category}`" class="ml-3 text-sm text-gray-700 dark:text-gray-300">
+                        <label :for="`category-${category}`" class="ml-3 text-base text-gray-700 dark:text-gray-300">
                           {{ category }}
                         </label>
                       </div>
@@ -202,19 +329,19 @@
                 <div class="mt-6 flex justify-end space-x-3">
                   <button
                     type="button"
-                    class="inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    class="inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2.5 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                     @click="showSettingsModal = false"
                   >
                     Annuler
                   </button>
                   <button
                     type="button"
-                    class="inline-flex justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    class="inline-flex justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2.5 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                     @click="saveSettings"
                     :disabled="isSaving"
                   >
                     <span v-if="isSaving" class="flex items-center">
-                      <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
@@ -260,41 +387,41 @@
                 <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 dark:text-white">
                   Ajouter une pensée positive
                 </DialogTitle>
-                <div class="mt-4 space-y-4">
+                <div class="mt-4 space-y-5">
                   <div>
-                    <label for="thought-content" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <label for="thought-content" class="block text-base font-medium text-gray-700 dark:text-gray-300">
                       Contenu
                     </label>
                     <textarea
                       id="thought-content"
                       v-model="newThought.content"
                       rows="4"
-                      class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                      class="mt-2 block w-full rounded-md border-gray-300 dark:border-gray-700 py-3 px-4 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-base dark:bg-gray-700 dark:text-white"
                       placeholder="Écrivez votre pensée positive ici..."
                     ></textarea>
                   </div>
 
                   <div>
-                    <label for="thought-author" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <label for="thought-author" class="block text-base font-medium text-gray-700 dark:text-gray-300">
                       Auteur
                     </label>
                     <input
                       id="thought-author"
                       v-model="newThought.author"
                       type="text"
-                      class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                      class="mt-2 block w-full rounded-md border-gray-300 dark:border-gray-700 py-3 px-4 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-base dark:bg-gray-700 dark:text-white"
                       placeholder="Anonyme"
                     />
                   </div>
 
                   <div>
-                    <label for="thought-category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <label for="thought-category" class="block text-base font-medium text-gray-700 dark:text-gray-300">
                       Catégorie
                     </label>
                     <select
                       id="thought-category"
                       v-model="newThought.category"
-                      class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 py-2 pl-3 pr-10 text-base focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                      class="mt-2 block w-full rounded-md border-gray-300 dark:border-gray-700 py-3 px-4 text-base focus:border-primary-500 focus:outline-none focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                     >
                       <option value="">Sélectionner une catégorie</option>
                       <option v-for="category in allCategories" :key="category" :value="category">
@@ -305,14 +432,14 @@
                   </div>
 
                   <div v-if="newThought.category === 'new'">
-                    <label for="new-category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <label for="new-category" class="block text-base font-medium text-gray-700 dark:text-gray-300">
                       Nouvelle catégorie
                     </label>
                     <input
                       id="new-category"
                       v-model="newCategory"
                       type="text"
-                      class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                      class="mt-2 block w-full rounded-md border-gray-300 dark:border-gray-700 py-3 px-4 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-base dark:bg-gray-700 dark:text-white"
                       placeholder="Nom de la nouvelle catégorie"
                     />
                   </div>
@@ -321,19 +448,19 @@
                 <div class="mt-6 flex justify-end space-x-3">
                   <button
                     type="button"
-                    class="inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    class="inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2.5 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                     @click="showAddThoughtModal = false"
                   >
                     Annuler
                   </button>
                   <button
                     type="button"
-                    class="inline-flex justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    class="inline-flex justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2.5 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                     @click="addThought"
                     :disabled="!isValidThought || isAddingThought"
                   >
                     <span v-if="isAddingThought" class="flex items-center">
-                      <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
@@ -360,7 +487,6 @@ import {
   DialogTitle,
   TransitionChild,
   TransitionRoot,
-  Switch
 } from '@headlessui/vue';
 import {
   CogIcon,
@@ -376,7 +502,12 @@ import {
   UserGroupIcon,
   GlobeIcon,
   CollectionIcon,
-  SearchIcon
+  SearchIcon,
+  ViewGridIcon,
+  ViewListIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  XIcon
 } from '@heroicons/vue/outline';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 import { usePositiveThoughtStore } from '@/stores/positiveThought';
@@ -397,6 +528,11 @@ const searchQuery = ref('');
 const selectedCategory = ref('');
 const thoughts = ref<PositiveThought[]>([]);
 const newCategory = ref('');
+
+// Nouvelles variables pour l'affichage amélioré
+const viewMode = ref('grid'); // 'grid' ou 'list'
+const currentPage = ref(1);
+const itemsPerPage = ref(12);
 
 // Données de la pensée actuelle (pour éviter les problèmes de typage avec le store)
 const currentThoughtData = computed<PositiveThought>(() => {
@@ -458,6 +594,38 @@ const filteredThoughts = computed(() => {
   );
 });
 
+// Propriétés calculées pour la pagination
+const totalPages = computed(() => Math.ceil(filteredThoughts.value.length / itemsPerPage.value));
+
+const paginatedThoughts = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  const end = start + itemsPerPage.value;
+  return filteredThoughts.value.slice(start, end);
+});
+
+// Calcul des pages à afficher dans la pagination (avec ellipses)
+const displayedPages = computed(() => {
+  const total = totalPages.value;
+  const current = currentPage.value;
+
+  if (total <= 7) {
+    // Si moins de 7 pages, afficher toutes les pages
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  // Sinon, afficher une pagination avec ellipses
+  if (current <= 3) {
+    // Début de liste: 1 2 3 4 5 ... N
+    return [1, 2, 3, 4, 5, '...', total] as const;
+  } else if (current >= total - 2) {
+    // Fin de liste: 1 ... N-4 N-3 N-2 N-1 N
+    return [1, '...', total - 4, total - 3, total - 2, total - 1, total] as const;
+  } else {
+    // Milieu de liste: 1 ... C-1 C C+1 ... N
+    return [1, '...', current - 1, current, current + 1, '...', total] as const;
+  }
+});
+
 // Validity check for new thought
 const isValidThought = computed(() => {
   if (!newThought.value.content.trim()) return false;
@@ -479,7 +647,15 @@ const refreshThought = async () => {
       categoryToFetch = selectedCategories.value[randomIndex];
     }
 
-    await positiveThoughtStore.getRandomPositiveThought(categoryToFetch);
+    // Récupérer directement la pensée et la stocker dans une variable locale
+    const thought = await positiveThoughtStore.getRandomPositiveThought(categoryToFetch);
+
+    // Forcer une mise à jour explicite de l'état local si nécessaire
+    if (thought) {
+      // Cette ligne est importante pour assurer la réactivité
+      positiveThoughtStore.currentThought = { ...thought };
+    }
+
     toast.success('Nouvelle pensée positive chargée');
   } catch (error) {
     console.error('Erreur lors du rafraîchissement de la pensée:', error);
@@ -494,6 +670,7 @@ const fetchAllThoughts = async () => {
     const allThoughts = await positiveThoughtStore.getAllThoughts();
     thoughts.value = allThoughts;
     selectedCategory.value = '';
+    currentPage.value = 1; // Réinitialiser la pagination
   } catch (error) {
     console.error('Erreur lors du chargement des pensées:', error);
     toast.error('Erreur lors du chargement des pensées');
@@ -505,6 +682,7 @@ const fetchThoughtsByCategory = async (category: string) => {
     selectedCategory.value = category;
     const categoryThoughts = await positiveThoughtStore.getThoughtsByCategory(category);
     thoughts.value = categoryThoughts;
+    currentPage.value = 1; // Réinitialiser la pagination
   } catch (error) {
     console.error(`Erreur lors du chargement des pensées de la catégorie ${category}:`, error);
     toast.error(`Erreur lors du chargement des pensées de la catégorie ${category}`);
@@ -513,8 +691,8 @@ const fetchThoughtsByCategory = async (category: string) => {
 
 const setAsDailyThought = (thought: PositiveThought) => {
   try {
-    // @ts-ignore - Nous devons ignorer l'erreur car le type attendu peut être différent
-    positiveThoughtStore.currentThought = thought;
+    // Utiliser la nouvelle méthode du store qui garantit la réactivité
+    positiveThoughtStore.setCurrentThought(thought);
     toast.success('Pensée définie comme pensée du jour');
   } catch (error) {
     console.error('Erreur lors de la définition de la pensée du jour:', error);
@@ -577,6 +755,7 @@ const addThought = async () => {
 };
 
 const getCategoryIcon = (category: string) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const iconMap: Record<string, any> = {
     'Motivation': StarIcon,
     'Bonheur': SunIcon,
@@ -643,6 +822,11 @@ watch(() => positiveThoughtStore.userSettings, (newSettings) => {
     }
   }
 }, { deep: true });
+
+// Réinitialiser la page courante quand la recherche change
+watch(searchQuery, () => {
+  currentPage.value = 1;
+});
 </script>
 
 <style>
