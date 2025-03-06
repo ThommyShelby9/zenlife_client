@@ -23,10 +23,6 @@ export interface FriendshipInfo {
   acceptedAt?: string;
 }
 
-
-// Constantes pour les types de notification liés aux amitiés
-// @/types/notification.ts
-
 export interface Notification {
   id: string;
   type: string;
@@ -48,7 +44,6 @@ export interface Notification {
     updatedAt: string;
     acceptedAt?: string;
   };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 
@@ -75,4 +70,5 @@ export const NotificationType = {
   SUCCESS: 'success',
   WARNING: 'warning',
   ERROR: 'error',
+  POSITIVE_THOUGHT: 'POSITIVE_THOUGHT'
 }

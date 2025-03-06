@@ -1,4 +1,4 @@
-// src/services/pushNotificationService.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useToast } from 'vue-toastification';
 import apiClient from '@/api/index';
 import { messaging } from '@/firebase/config';
@@ -193,77 +193,98 @@ class PushNotificationService {
       }
 
       // S'assurer que le service worker est enregistré et prêt
-      await this.waitForServiceWorkerReady();
+      const swRegistration = await this.waitForServiceWorkerReady();
 
-      // Tenter d'obtenir le token FCM
+      // Tentative de création d'un abonnement Web Push standard
+      let subscription;
       let currentToken;
+      let isStandardWebPush = false;
+
       try {
-        currentToken = await getToken(messaging, {
-          vapidKey: this.vapidKey,
-          serviceWorkerRegistration: await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js')
+        // Essayer d'abord avec l'API Web Push standard
+        subscription = await swRegistration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: this.urlBase64ToUint8Array(this.vapidKey)
         });
-      } catch (tokenError) {
-        console.error('Erreur lors de l\'obtention du token FCM:', tokenError);
-        // Essayer une approche alternative si FCM échoue
-        currentToken = await this.getAlternativeToken();
+        isStandardWebPush = true;
+        console.log('Abonnement Web Push créé avec succès');
+      } catch (webPushError) {
+        console.warn('Échec de l\'abonnement Web Push standard, tentative avec FCM:', webPushError);
+
+        // Utiliser FCM comme fallback
+        try {
+          currentToken = await getToken(messaging, {
+            vapidKey: this.vapidKey,
+            serviceWorkerRegistration: swRegistration
+          });
+
+          if (!currentToken) {
+            throw new Error('Impossible d\'obtenir un token FCM');
+          }
+
+          console.log('Token FCM obtenu avec succès');
+        } catch (fcmError) {
+          console.error('Erreur lors de l\'obtention du token FCM:', fcmError);
+          return false;
+        }
       }
 
-      if (!currentToken) {
-        console.error('No FCM token received');
+      // Préparer les données d'abonnement à envoyer au serveur
+      let serverSubscription;
+
+      if (isStandardWebPush && subscription) {
+        // Format pour l'abonnement Web Push standard
+        const subscriptionJSON = subscription.toJSON();
+
+        // Vérifier que l'endpoint existe bien
+        if (!subscriptionJSON.endpoint) {
+          throw new Error("L'endpoint de souscription est manquant");
+        }
+
+        serverSubscription = {
+          endpoint: subscriptionJSON.endpoint,
+          keys: {
+            p256dh: subscriptionJSON.keys?.p256dh || '',
+            auth: subscriptionJSON.keys?.auth || ''
+          }
+        };
+
+        // Stocker un identifiant pour cet abonnement - avec vérification
+        localStorage.setItem(this.fcmTokenKey, btoa(subscriptionJSON.endpoint));
+      } else if (currentToken) {
+        // Format pour l'abonnement FCM
+        serverSubscription = {
+          endpoint: `https://fcm.googleapis.com/fcm/send/${currentToken}`,
+          keys: {
+            p256dh: 'FCM-p256dh-key', // Utiliser une chaîne en encodage base64 valide
+            auth: 'FCM-auth-key'       // Utiliser une chaîne en encodage base64 valide
+          }
+        };
+
+        // Stocker le token FCM
+        localStorage.setItem(this.fcmTokenKey, currentToken);
+      } else {
+        console.error('Aucun abonnement créé');
         return false;
       }
 
-      // Sauvegarder le token localement
-      localStorage.setItem(this.fcmTokenKey, currentToken);
+      // Définir le statut comme activé
       localStorage.setItem(this.localStorageKey, 'true');
 
-      // Créer l'objet d'abonnement au format attendu par le serveur
-      const subscription = {
-        endpoint: `https://fcm.googleapis.com/fcm/send/${currentToken}`,
-        keys: {
-          p256dh: 'FCM-key', // Valeur placeholder
-          auth: 'FCM-auth'   // Valeur placeholder
-        }
-      };
-
       // Envoyer l'abonnement au serveur
-      await apiClient.post('/notifications/subscribe', subscription);
+      try {
+        await apiClient.post('/notifications/subscribe', serverSubscription);
+        console.log('Abonnement enregistré avec succès sur le serveur');
+      } catch (apiError) {
+        console.error('Erreur lors de l\'enregistrement de l\'abonnement:', apiError);
+        // Continuer même si l'envoi au serveur échoue, car l'abonnement local est valide
+      }
 
-      console.log('Abonnement aux notifications push réussi');
       return true;
     } catch (error) {
       console.error('Error subscribing to push notifications:', error);
       localStorage.setItem(this.localStorageKey, 'false');
       return false;
-    }
-  }
-
-  /**
-   * Méthode alternative pour obtenir un token
-   * À utiliser si getToken de FCM échoue
-   */
-  private async getAlternativeToken(): Promise<string | null> {
-    try {
-      // Cette méthode utilise directement l'API Web Push si Firebase échoue
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: this.urlBase64ToUint8Array(this.vapidKey)
-      });
-
-      // Convertir l'abonnement en format compatible avec le serveur
-      const subscriptionJson = subscription.toJSON();
-
-      // Simuler un token FCM pour la compatibilité avec notre système
-      const simulatedToken = btoa(JSON.stringify({
-        endpoint: subscriptionJson.endpoint,
-        keys: subscriptionJson.keys
-      })).substring(0, 40);
-
-      return simulatedToken;
-    } catch (error) {
-      console.error('Erreur lors de l\'obtention d\'un token alternatif:', error);
-      return null;
     }
   }
 
@@ -301,7 +322,7 @@ class PushNotificationService {
       // Informer le serveur
       try {
         await apiClient.post('/notifications/unsubscribe', {
-          endpoint: `https://fcm.googleapis.com/fcm/send/${token}`
+          endpoint: token.startsWith('http') ? token : `https://fcm.googleapis.com/fcm/send/${token}`
         });
       } catch (apiError) {
         console.warn('Erreur lors de l\'information du serveur de désabonnement:', apiError);

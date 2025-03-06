@@ -49,5 +49,19 @@ export const notificationApi = {
    */
   deleteNotification: (notificationId: string) => {
     return apiClient.delete(`/notifications/${notificationId}`);
+  },
+
+  /**
+   * Tester les notifications push
+   */
+  testPushNotification: () => {
+    return apiClient.post('/notifications/test');
+  },
+
+  /**
+   * Récupérer la clé publique VAPID pour les notifications push
+   */
+  getPublicKey: () => {
+    return apiClient.get('/notifications/public-key');
   }
 };
