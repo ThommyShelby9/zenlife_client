@@ -67,6 +67,8 @@ try {
 
 // Variable pour suivre si le modal de mise à jour a déjà été montré
 const updateModalShown = false;
+// Variable pour éviter les actions multiples
+let activationInProgress = false;
 
 // Fonction pour créer un modal de mise à jour élégant
 function createUpdateModal() {
@@ -145,11 +147,31 @@ function createUpdateModal() {
   refreshButton.onmouseleave = () => { refreshButton.style.backgroundColor = '#4f46e5'; };
 
   refreshButton.onclick = () => {
-    // Rafraîchir la page et appliquer la mise à jour
+    if (activationInProgress) return; // Éviter les clics multiples
+
+    activationInProgress = true;
+    refreshButton.textContent = 'Activation en cours...';
+    refreshButton.style.backgroundColor = '#9ca3af';
+    refreshButton.style.cursor = 'wait';
+
+    // Définir un flag dans localStorage pour éviter la boucle
+    localStorage.setItem('sw_update_pending', 'true');
+
+    // Ajouter un écouteur pour le changement de contrôleur
+    navigator.serviceWorker.addEventListener('controllerchange', function() {
+      console.log('Nouveau contrôleur actif, recharge de la page');
+      localStorage.removeItem('sw_update_pending'); // Nettoyer le flag
+      window.location.reload();
+    });
+
+    // Envoyer la demande d'activation au service worker
     if (navigator.serviceWorker.controller) {
+      console.log('Demande au service worker de prendre le contrôle');
       navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+    } else {
+      // Si pas de contrôleur, recharger simplement la page
+      window.location.reload();
     }
-    window.location.reload();
   };
 
   // Bouton pour différer
@@ -164,6 +186,8 @@ function createUpdateModal() {
   laterButton.style.cursor = 'pointer';
   laterButton.onclick = () => {
     document.body.removeChild(modalContainer);
+    // Réinitialiser le drapeau pour permettre de remontrer le modal plus tard
+    window.__SW_UPDATE_MODAL_SHOWN = false;
   };
 
   // Assembler le modal
@@ -202,6 +226,13 @@ window.showUpdateModal = showUpdateModal;
 export function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
+      // Vérifier si une mise à jour est en cours (pour éviter la boucle)
+      const updatePending = localStorage.getItem('sw_update_pending') === 'true';
+      if (updatePending) {
+        console.log('Mise à jour déjà en cours, attente de la prise de contrôle...');
+        return; // Ne pas continuer l'initialisation
+      }
+
       // S'assurer que le drapeau de mise à jour est réinitialisé au chargement
       window.__SW_UPDATE_MODAL_SHOWN = false;
 
