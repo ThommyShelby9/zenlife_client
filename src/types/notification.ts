@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export interface NotificationPreferences {
   tasks: boolean;
@@ -47,6 +48,7 @@ export interface Notification {
     updatedAt: string;
     acceptedAt?: string;
   };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 

@@ -1,4 +1,3 @@
-// PositiveThought-related types
 export interface PositiveThought {
   id?: string;
   content: string;
@@ -12,11 +11,12 @@ export interface UserPositiveThoughtSetting {
   id?: string;
   userId?: string;
   enabled: boolean;
-  frequency: 'hourly' | 'daily' | 'custom';
-  customInterval?: number; // in minutes
-  preferredCategories?: string[];
+  frequency: string;
+  customInterval?: number;
+  preferredCategories: string[];
   notificationEnabled: boolean;
-  displayOnLockScreen?: boolean;
+  displayOnLockScreen: boolean;
+  pushNotificationsEnabled?: boolean; // Nouveau champ pour les notifications push
   createdAt?: string;
   updatedAt?: string;
 }

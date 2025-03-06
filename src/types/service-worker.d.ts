@@ -1,6 +1,7 @@
 // Placez ce fichier dans le dossier src/types
 
 interface ExtendedEvent extends Event {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   waitUntil(fn: Promise<any>): void;
 }
 
@@ -13,10 +14,11 @@ interface InstallEvent extends ExtendedEvent {
   activeWorker: ServiceWorker;
 }
 
-interface ActivateEvent extends ExtendedEvent {}
+type ActivateEvent = ExtendedEvent
 
 interface PushEvent extends ExtendedEvent {
   data?: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     json(): any;
     text(): string;
     arrayBuffer(): ArrayBuffer;
@@ -25,6 +27,7 @@ interface PushEvent extends ExtendedEvent {
 
 interface NotificationEvent extends ExtendedEvent {
   notification: Notification & {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data?: any;
     close(): void;
   };
@@ -39,6 +42,7 @@ interface NotificationOptions {
   icon?: string;
   badge?: string;
   tag?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any;
   requireInteraction?: boolean;
   silent?: boolean;
@@ -77,6 +81,7 @@ interface Client {
   id: string;
   url: string;
   focus(): Promise<Client>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   postMessage(message: any): void;
 }
 
@@ -88,4 +93,4 @@ interface ServiceWorkerRegistration {
 }
 
 // Redéfinir self pour le contexte de Service Worker
-declare var self: ServiceWorkerGlobalScope;
+declare let self: ServiceWorkerGlobalScope;

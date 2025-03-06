@@ -84,6 +84,11 @@
         Afficher les pensées positives sur l'écran de verrouillage (fonctionne uniquement avec l'application installée)
       </p>
     </div>
+
+    <!-- Nouveau composant pour les notifications push -->
+    <div class="mt-6 pt-5 border-t border-gray-200 dark:border-gray-700">
+      <PushNotificationToggle v-model="pushNotificationsEnabled" />
+    </div>
   </div>
 </template>
 
@@ -91,6 +96,7 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { Switch } from '@headlessui/vue';
 import { ExclamationIcon } from '@heroicons/vue/solid';
+import PushNotificationToggle from '@/components/notification/PushNotificationToggle.vue';
 
 // Définir une interface qui étend Navigator pour inclure la propriété standalone
 interface SafariNavigator extends Navigator {
@@ -137,6 +143,12 @@ const customInterval = computed({
 const displayOnLockScreen = computed({
   get: () => props.modelValue.displayOnLockScreen ?? false,
   set: (value) => emit('update:modelValue', { ...props.modelValue, displayOnLockScreen: value })
+});
+
+// Nouvelle propriété pour les notifications push
+const pushNotificationsEnabled = computed({
+  get: () => props.modelValue.pushNotificationsEnabled ?? false,
+  set: (value) => emit('update:modelValue', { ...props.modelValue, pushNotificationsEnabled: value })
 });
 
 // Vérifier si les notifications sont supportées

@@ -4,38 +4,66 @@ import apiClient from '@/api/index';
 import { messaging } from '@/firebase/config';
 import { getToken, onMessage, deleteToken } from 'firebase/messaging';
 
-export class PushNotificationService {
+class PushNotificationService {
   private toast = useToast();
   private isInitialized = false;
   private localStorageKey = 'push_notifications_enabled';
+  private fcmTokenKey = 'fcm_token';
+  private vapidKey = 'BJsD0abRfRE3CxTW9PWX04JVj0YNh__cNko8OSRxTGVVAd7Gf-0tMskITTasqp5e6_e3DJ398_r_sReS4HbKYxw';
 
   constructor() {
-    if (this.isSupported()) {
-      // Gestion des messages en premier plan
-      onMessage(messaging, (payload) => {
-        console.log('Message reçu en premier plan:', payload);
+    this.setupForegroundHandler();
+  }
 
-        // Afficher un toast pour les notifications en premier plan
-        if (payload.notification) {
-          this.toast.info(`${payload.notification.title}: ${payload.notification.body}`, {
-            timeout: 10000,
-            closeOnClick: false
-          });
-        }
-      });
+  /**
+   * Configure l'écouteur de messages en premier plan
+   */
+  private setupForegroundHandler() {
+    if (this.isSupported()) {
+      try {
+        // Gestion des messages en premier plan
+        onMessage(messaging, (payload) => {
+          console.log('Message reçu en premier plan:', payload);
+
+          // Afficher un toast pour les notifications en premier plan
+          if (payload.notification) {
+            this.toast.info(
+              `${payload.notification.title}: ${payload.notification.body}`,
+              {
+                timeout: 10000,
+                closeOnClick: true,
+                onClick: () => {
+                  if (payload.data && payload.data.url) {
+                    window.location.href = payload.data.url;
+                  }
+                }
+              }
+            );
+          }
+        });
+      } catch (error) {
+        console.error('Erreur lors de la configuration du gestionnaire de premier plan:', error);
+      }
     }
   }
 
-  private isLocalDevelopment(): boolean {
+  /**
+   * Vérifie si le navigateur est en développement local
+   */
+  public isLocalDevelopment(): boolean {
     return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   }
 
-  // Vérifier si les notifications push sont supportées
+  /**
+   * Vérifie si les notifications push sont supportées
+   */
   public isSupported(): boolean {
     return 'serviceWorker' in navigator && 'PushManager' in window;
   }
 
-  // Initialiser le service de notification push
+  /**
+   * Initialise le service de notification push
+   */
   public async initialize(): Promise<boolean> {
     if (!this.isSupported()) {
       console.warn('Push notifications are not supported by this browser');
@@ -43,24 +71,29 @@ export class PushNotificationService {
     }
 
     if (this.isInitialized) {
-      return true;
+      return await this.getSubscriptionStatus();
     }
 
     try {
       // Attendre que le service worker soit prêt
-      await navigator.serviceWorker.ready;
+      await this.waitForServiceWorkerReady();
 
       // Vérifier l'état sauvegardé dans localStorage
       const enabled = localStorage.getItem(this.localStorageKey) === 'true';
 
       // Si les notifications sont activées selon localStorage, vérifier le token
       if (enabled) {
-        const currentToken = localStorage.getItem('fcm_token');
+        const currentToken = localStorage.getItem(this.fcmTokenKey);
 
         if (!currentToken) {
           // Si le token n'existe pas mais que les notifications sont censées être activées,
-          // essayer de s'abonner à nouveau
-          await this.requestPermissionAndSubscribe();
+          // essayer de s'abonner à nouveau si la permission est déjà accordée
+          if (Notification.permission === 'granted') {
+            await this.subscribe();
+          } else {
+            // Si la permission n'est pas accordée, mettre à jour l'état
+            localStorage.setItem(this.localStorageKey, 'false');
+          }
         }
       }
 
@@ -72,8 +105,42 @@ export class PushNotificationService {
     }
   }
 
-  // Demander la permission et s'abonner
+  /**
+   * Attend que le service worker soit prêt
+   */
+  private async waitForServiceWorkerReady(): Promise<ServiceWorkerRegistration> {
+    // Attendre que le service worker soit prêt
+    try {
+      // Vérifier si le service worker est déjà enregistré
+      return await navigator.serviceWorker.ready;
+    } catch (error) {
+      console.error('Erreur lors de l\'attente du service worker:', error);
+
+      // Tenter d'enregistrer le service worker si nécessaire
+      if ('serviceWorker' in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+          console.log('Service Worker enregistré avec succès:', registration.scope);
+          return registration;
+        } catch (regError) {
+          console.error('Erreur lors de l\'enregistrement du service worker:', regError);
+          throw regError;
+        }
+      } else {
+        throw new Error('Service Worker non supporté');
+      }
+    }
+  }
+
+  /**
+   * Demande la permission et s'abonne aux notifications
+   */
   public async requestPermissionAndSubscribe(): Promise<boolean> {
+    if (!this.isSupported()) {
+      console.warn('Push notifications are not supported by this browser');
+      return false;
+    }
+
     try {
       // Vérifier d'abord le statut actuel des permissions
       if (Notification.permission === "granted") {
@@ -112,26 +179,34 @@ export class PushNotificationService {
     }
   }
 
-  // S'abonner aux notifications push
+  /**
+   * S'abonne aux notifications push
+   */
   private async subscribe(): Promise<boolean> {
     try {
+      // Vérifier si nous sommes en développement local
       if (this.isLocalDevelopment()) {
         console.log('Environnement local détecté - simulation d\'un abonnement aux notifications');
-        localStorage.setItem('fcm_token', 'local-dev-token');
+        localStorage.setItem(this.fcmTokenKey, 'local-dev-token');
         localStorage.setItem(this.localStorageKey, 'true');
         return true;
       }
-      // Récupérer la clé VAPID du serveur
-      const response = await apiClient.get('/notifications/public-key');
-      const vapidKey = response.data.publicKey;
 
-      if (!vapidKey) {
-        console.error('No public key available');
-        return false;
+      // S'assurer que le service worker est enregistré et prêt
+      await this.waitForServiceWorkerReady();
+
+      // Tenter d'obtenir le token FCM
+      let currentToken;
+      try {
+        currentToken = await getToken(messaging, {
+          vapidKey: this.vapidKey,
+          serviceWorkerRegistration: await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js')
+        });
+      } catch (tokenError) {
+        console.error('Erreur lors de l\'obtention du token FCM:', tokenError);
+        // Essayer une approche alternative si FCM échoue
+        currentToken = await this.getAlternativeToken();
       }
-
-      // Obtenir le token FCM
-      const currentToken = await getToken(messaging, { vapidKey });
 
       if (!currentToken) {
         console.error('No FCM token received');
@@ -139,7 +214,7 @@ export class PushNotificationService {
       }
 
       // Sauvegarder le token localement
-      localStorage.setItem('fcm_token', currentToken);
+      localStorage.setItem(this.fcmTokenKey, currentToken);
       localStorage.setItem(this.localStorageKey, 'true');
 
       // Créer l'objet d'abonnement au format attendu par le serveur
@@ -154,27 +229,50 @@ export class PushNotificationService {
       // Envoyer l'abonnement au serveur
       await apiClient.post('/notifications/subscribe', subscription);
 
-      this.toast.success('Notifications activées sur cet appareil');
+      console.log('Abonnement aux notifications push réussi');
       return true;
     } catch (error) {
       console.error('Error subscribing to push notifications:', error);
       localStorage.setItem(this.localStorageKey, 'false');
-
-      // Message d'erreur plus explicite
-      if (error instanceof DOMException && error.name === 'NotAllowedError') {
-        this.toast.error('Notification bloquée par le navigateur. Vérifiez les paramètres de votre navigateur.');
-      } else {
-        this.toast.error('Erreur lors de l\'activation des notifications');
-      }
-
       return false;
     }
   }
 
-  // Se désabonner des notifications push
+  /**
+   * Méthode alternative pour obtenir un token
+   * À utiliser si getToken de FCM échoue
+   */
+  private async getAlternativeToken(): Promise<string | null> {
+    try {
+      // Cette méthode utilise directement l'API Web Push si Firebase échoue
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: this.urlBase64ToUint8Array(this.vapidKey)
+      });
+
+      // Convertir l'abonnement en format compatible avec le serveur
+      const subscriptionJson = subscription.toJSON();
+
+      // Simuler un token FCM pour la compatibilité avec notre système
+      const simulatedToken = btoa(JSON.stringify({
+        endpoint: subscriptionJson.endpoint,
+        keys: subscriptionJson.keys
+      })).substring(0, 40);
+
+      return simulatedToken;
+    } catch (error) {
+      console.error('Erreur lors de l\'obtention d\'un token alternatif:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Se désabonne des notifications push
+   */
   public async unsubscribe(): Promise<boolean> {
     try {
-      const token = localStorage.getItem('fcm_token');
+      const token = localStorage.getItem(this.fcmTokenKey);
 
       if (!token) {
         localStorage.setItem(this.localStorageKey, 'false');
@@ -182,27 +280,47 @@ export class PushNotificationService {
       }
 
       // Supprimer le token FCM
-      await deleteToken(messaging);
+      try {
+        await deleteToken(messaging);
+      } catch (error) {
+        console.warn('Erreur lors de la suppression du token FCM:', error);
+        // Continuer malgré l'erreur, car nous allons informer le serveur
+      }
+
+      // Désabonnement du service worker si possible
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        if (subscription) {
+          await subscription.unsubscribe();
+        }
+      } catch (swError) {
+        console.warn('Erreur lors du désabonnement du service worker:', swError);
+      }
 
       // Informer le serveur
-      await apiClient.post('/notifications/unsubscribe', {
-        endpoint: `https://fcm.googleapis.com/fcm/send/${token}`
-      });
+      try {
+        await apiClient.post('/notifications/unsubscribe', {
+          endpoint: `https://fcm.googleapis.com/fcm/send/${token}`
+        });
+      } catch (apiError) {
+        console.warn('Erreur lors de l\'information du serveur de désabonnement:', apiError);
+      }
 
       // Supprimer le token du stockage local
-      localStorage.removeItem('fcm_token');
+      localStorage.removeItem(this.fcmTokenKey);
       localStorage.setItem(this.localStorageKey, 'false');
 
-      this.toast.success('Notifications désactivées sur cet appareil');
       return true;
     } catch (error) {
       console.error('Error unsubscribing from push notifications:', error);
-      this.toast.error('Erreur lors de la désactivation des notifications');
       return false;
     }
   }
 
-  // Vérifier l'état de l'abonnement
+  /**
+   * Vérifie l'état de l'abonnement
+   */
   public async getSubscriptionStatus(): Promise<boolean> {
     if (!this.isSupported()) {
       return false;
@@ -214,7 +332,7 @@ export class PushNotificationService {
 
       // Si oui, vérifier si nous avons un token FCM
       if (enabled) {
-        const token = localStorage.getItem('fcm_token');
+        const token = localStorage.getItem(this.fcmTokenKey);
         return !!token;
       }
 
@@ -225,7 +343,9 @@ export class PushNotificationService {
     }
   }
 
-  // Utilitaire pour convertir une clé base64 en Uint8Array
+  /**
+   * Utilitaire pour convertir une clé base64 en Uint8Array
+   */
   private urlBase64ToUint8Array(base64String: string): Uint8Array {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding)
@@ -247,5 +367,7 @@ export const pushNotificationService = new PushNotificationService();
 
 // Initialiser automatiquement le service
 if (typeof window !== 'undefined') {
-  pushNotificationService.initialize();
+  pushNotificationService.initialize().catch(error => {
+    console.error('Erreur lors de l\'initialisation du service de notification push:', error);
+  });
 }
