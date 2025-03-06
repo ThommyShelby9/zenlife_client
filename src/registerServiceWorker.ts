@@ -157,20 +157,45 @@ function createUpdateModal() {
     // Définir un flag dans localStorage pour éviter la boucle
     localStorage.setItem('sw_update_pending', 'true');
 
+    // Ajout d'un timeout de sécurité pour recharger la page même si controllerchange n'est pas déclenché
+    const safetyTimeout = setTimeout(() => {
+      console.log('Timeout de sécurité atteint, rechargement de la page');
+      localStorage.removeItem('sw_update_pending');
+      window.location.reload();
+    }, 3000); // 3 secondes de délai
+
     // Ajouter un écouteur pour le changement de contrôleur
-    navigator.serviceWorker.addEventListener('controllerchange', function() {
+    const controllerChangeHandler = function() {
       console.log('Nouveau contrôleur actif, recharge de la page');
+      clearTimeout(safetyTimeout); // Annuler le timeout car l'événement s'est produit
       localStorage.removeItem('sw_update_pending'); // Nettoyer le flag
       window.location.reload();
-    });
+    };
+
+    navigator.serviceWorker.addEventListener('controllerchange', controllerChangeHandler, { once: true });
 
     // Envoyer la demande d'activation au service worker
     if (navigator.serviceWorker.controller) {
       console.log('Demande au service worker de prendre le contrôle');
       navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+
+      // Dans certains navigateurs, le controller peut ne pas changer immédiatement
+      // Vérification supplémentaire après un court délai
+      setTimeout(() => {
+        try {
+          if (navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+          }
+        } catch (e) {
+          console.warn('Impossible d\'envoyer un second message au service worker', e);
+        }
+      }, 500);
     } else {
-      // Si pas de contrôleur, recharger simplement la page
-      window.location.reload();
+      // Si pas de contrôleur, recharger simplement la page après un bref délai
+      setTimeout(() => {
+        localStorage.removeItem('sw_update_pending');
+        window.location.reload();
+      }, 1000);
     }
   };
 
