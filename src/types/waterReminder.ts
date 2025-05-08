@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface WaterReminderSetting {
   enabled?: any; // Gardez cette ligne pour la compatibilité
   id?: string;

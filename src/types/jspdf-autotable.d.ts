@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Créer un fichier types/jspdf-autotable.d.ts dans votre projet avec ce contenu:
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { jsPDF } from 'jspdf';
 
 declare module 'jspdf' {
@@ -16,8 +18,8 @@ declare module 'jspdf' {
       getWidth: () => number;
       getHeight: () => number;
     };
-    pages: any[];
-    events: any;
+    pages: unknown[];
+    events: never;
     scaleFactor: number;
     getEncryptor: (objectId: number) => (data: string) => string;
   }

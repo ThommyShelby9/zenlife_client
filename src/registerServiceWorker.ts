@@ -70,7 +70,8 @@ const updateModalShown = false;
 // Variable pour éviter les actions multiples
 let activationInProgress = false;
 
-// Fonction pour créer un modal de mise à jour élégant
+// Fonction pour créer un modal de mise à jour élégant - conservée mais non utilisée
+// Note: Cette fonction est désactivée mais conservée au cas où vous souhaiteriez revenir à une mise à jour manuelle
 function createUpdateModal() {
   // Vérifier si le modal existe déjà
   const existingModal = document.getElementById('sw-update-modal');
@@ -235,8 +236,9 @@ function createUpdateModal() {
   return modalContainer;
 }
 
-// Fonction pour montrer le modal de mise à jour
+// Fonction pour montrer le modal de mise à jour (désactivée mais conservée)
 function showUpdateModal() {
+  // Cette fonction est conservée mais ne sera pas appelée dans la nouvelle implémentation
   // Vérifier si le modal a déjà été montré
   if (window.__SW_UPDATE_MODAL_SHOWN) return;
 
@@ -246,6 +248,43 @@ function showUpdateModal() {
 
 // Exposer la fonction dans window pour pouvoir l'appeler de partout
 window.showUpdateModal = showUpdateModal;
+
+// Fonction pour appliquer automatiquement la mise à jour
+function applyUpdate(newWorker: ServiceWorker) {
+  if (activationInProgress) return; // Éviter les actions multiples
+
+  activationInProgress = true;
+  console.log('Application automatique de la mise à jour');
+
+  // Définir un flag dans localStorage pour éviter la boucle
+  localStorage.setItem('sw_update_pending', 'true');
+
+  // Ajout d'un timeout de sécurité pour recharger la page
+  const safetyTimeout = setTimeout(() => {
+    console.log('Timeout de sécurité atteint, rechargement de la page');
+    localStorage.removeItem('sw_update_pending');
+    window.location.reload();
+  }, 3000); // 3 secondes de délai
+
+  // Écouteur pour le changement de contrôleur
+  const controllerChangeHandler = function() {
+    console.log('Nouveau contrôleur actif, recharge de la page');
+    clearTimeout(safetyTimeout);
+    localStorage.removeItem('sw_update_pending');
+    window.location.reload();
+  };
+
+  navigator.serviceWorker.addEventListener('controllerchange', controllerChangeHandler, { once: true });
+
+  // Demander au nouveau worker de prendre le contrôle
+  if (newWorker) {
+    console.log('Demande au nouveau worker de prendre le contrôle');
+    newWorker.postMessage({ type: 'SKIP_WAITING' });
+  } else if (navigator.serviceWorker.controller) {
+    console.log('Demande au controller actuel de prendre le contrôle');
+    navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+  }
+}
 
 // Fonction pour enregistrer le service worker
 export function registerServiceWorker() {
@@ -274,13 +313,11 @@ export function registerServiceWorker() {
             if (newWorker) {
               newWorker.addEventListener('statechange', () => {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  // Un nouveau service worker est disponible, mais attend d'être activé
+                  // Un nouveau service worker est disponible
                   console.log('Nouveau Service Worker disponible');
 
-                  // Afficher le modal de mise à jour (une seule fois)
-                  if (!window.__SW_UPDATE_MODAL_SHOWN) {
-                    showUpdateModal();
-                  }
+                  // Appliquer automatiquement la mise à jour sans afficher de modal
+                  applyUpdate(newWorker);
                 }
               });
             }

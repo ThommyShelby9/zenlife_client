@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Auth-related types
 export interface LoginPayload {
   email: string;
