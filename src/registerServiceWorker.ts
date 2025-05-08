@@ -249,6 +249,33 @@ function showUpdateModal() {
 // Exposer la fonction dans window pour pouvoir l'appeler de partout
 window.showUpdateModal = showUpdateModal;
 
+// Vérifier si la mise à jour est nécessaire
+function checkForUpdate(registration: ServiceWorkerRegistration) {
+  // Vérifier si une version est déjà stockée
+  const currentVersion = localStorage.getItem('sw_current_version') || '0';
+
+  // Générer un identificateur de version basé sur le timestamp
+  const newVersion = Date.now().toString();
+
+  // Comparer avec la version précédente (avec un délai minimum de 24h entre les mises à jour)
+  const lastUpdateTime = parseInt(localStorage.getItem('sw_last_update_time') || '0', 10);
+  const currentTime = Date.now();
+  const updateInterval = 24 * 60 * 60 * 1000; // 24 heures en millisecondes
+
+  if (currentTime - lastUpdateTime < updateInterval) {
+    console.log('Dernière mise à jour trop récente, report de la nouvelle mise à jour');
+    return false;
+  }
+
+  console.log(`Vérification de mise à jour. Version actuelle: ${currentVersion}, Nouvelle version potentielle: ${newVersion}`);
+
+  // Mettre à jour la version en mémoire
+  localStorage.setItem('sw_current_version', newVersion);
+  localStorage.setItem('sw_last_update_time', currentTime.toString());
+
+  return true;
+}
+
 // Fonction pour appliquer automatiquement la mise à jour
 function applyUpdate(newWorker: ServiceWorker) {
   if (activationInProgress) return; // Éviter les actions multiples
@@ -259,19 +286,13 @@ function applyUpdate(newWorker: ServiceWorker) {
   // Définir un flag dans localStorage pour éviter la boucle
   localStorage.setItem('sw_update_pending', 'true');
 
-  // Ajout d'un timeout de sécurité pour recharger la page
-  const safetyTimeout = setTimeout(() => {
-    console.log('Timeout de sécurité atteint, rechargement de la page');
-    localStorage.removeItem('sw_update_pending');
-    window.location.reload();
-  }, 3000); // 3 secondes de délai
-
   // Écouteur pour le changement de contrôleur
   const controllerChangeHandler = function() {
-    console.log('Nouveau contrôleur actif, recharge de la page');
-    clearTimeout(safetyTimeout);
+    console.log('Nouveau contrôleur actif, recharge de la page dans la prochaine session');
+    // Ne pas rechargez la page immédiatement, laissez l'utilisateur finir sa session
+    localStorage.setItem('sw_updated', 'true');
+    activationInProgress = false;
     localStorage.removeItem('sw_update_pending');
-    window.location.reload();
   };
 
   navigator.serviceWorker.addEventListener('controllerchange', controllerChangeHandler, { once: true });
@@ -283,6 +304,9 @@ function applyUpdate(newWorker: ServiceWorker) {
   } else if (navigator.serviceWorker.controller) {
     console.log('Demande au controller actuel de prendre le contrôle');
     navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+  } else {
+    activationInProgress = false;
+    localStorage.removeItem('sw_update_pending');
   }
 }
 
@@ -295,6 +319,18 @@ export function registerServiceWorker() {
       if (updatePending) {
         console.log('Mise à jour déjà en cours, attente de la prise de contrôle...');
         return; // Ne pas continuer l'initialisation
+      }
+
+      // Vérifier si un rechargement est nécessaire après une mise à jour précédente
+      const swUpdated = localStorage.getItem('sw_updated') === 'true';
+      if (swUpdated) {
+        console.log('Mise à jour appliquée dans une session précédente, rechargement pour finaliser');
+        localStorage.removeItem('sw_updated');
+        // Rechargement différé pour éviter les boucles
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+        return;
       }
 
       // S'assurer que le drapeau de mise à jour est réinitialisé au chargement
@@ -316,8 +352,14 @@ export function registerServiceWorker() {
                   // Un nouveau service worker est disponible
                   console.log('Nouveau Service Worker disponible');
 
-                  // Appliquer automatiquement la mise à jour sans afficher de modal
-                  applyUpdate(newWorker);
+                  // Vérifier si la mise à jour doit être appliquée
+                  if (checkForUpdate(registration)) {
+                    console.log('Mise à jour validée, application en arrière-plan');
+                    // Appliquer la mise à jour en arrière-plan
+                    applyUpdate(newWorker);
+                  } else {
+                    console.log('Mise à jour reportée');
+                  }
                 }
               });
             }
