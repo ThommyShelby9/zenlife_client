@@ -1,10 +1,12 @@
+<!-- eslint-disable @typescript-eslint/no-explicit-any -->
+<!-- ForgotPassword.vue -->
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
     <div class="sm:mx-auto sm:w-full sm:max-w-md">
       <img class="mx-auto h-24 w-auto" src="@/assets/img/logo.png" alt="ZenLife" />
       <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">Mot de passe oublié</h2>
       <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-        Entrez votre adresse e-mail et nous vous enverrons un lien pour réinitialiser votre mot de passe.
+        Entrez votre adresse e-mail et nous vous enverrons un code de vérification.
       </p>
     </div>
 
@@ -16,18 +18,18 @@
               <CheckCircleIcon class="h-5 w-5 text-green-400" aria-hidden="true" />
             </div>
             <div class="ml-3">
-              <h3 class="text-sm font-medium text-green-800 dark:text-green-200">E-mail envoyé</h3>
+              <h3 class="text-sm font-medium text-green-800 dark:text-green-200">Code envoyé</h3>
               <div class="mt-2 text-sm text-green-700 dark:text-green-300">
                 <p>
-                  Un e-mail a été envoyé à {{ email }}. Veuillez suivre les instructions pour réinitialiser votre mot de passe.
+                  Un code de vérification a été envoyé à {{ email }}. Utilisez ce code pour réinitialiser votre mot de passe.
                 </p>
               </div>
               <div class="mt-4">
                 <RouterLink
-                  to="/auth/login"
+                  to="/auth/reset-password"
                   class="text-sm font-medium text-green-600 dark:text-green-400 hover:text-green-500 dark:hover:text-green-300"
                 >
-                  Retour à la page de connexion
+                  Saisir le code de vérification
                 </RouterLink>
               </div>
             </div>
@@ -61,7 +63,7 @@
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              {{ isLoading ? 'Envoi en cours...' : 'Envoyer le lien de réinitialisation' }}
+              {{ isLoading ? 'Envoi en cours...' : 'Envoyer le code de vérification' }}
             </button>
           </div>
 
@@ -127,10 +129,10 @@ const handleSubmit = async () => {
       if (data.message === 'Utilisateur non trouvé') {
         errors.email = 'Aucun compte associé à cette adresse e-mail';
       } else {
-        toast.error(data.message || 'Une erreur est survenue lors de l\'envoi du lien de réinitialisation');
+        toast.error(data.message || 'Une erreur est survenue lors de l\'envoi du code de vérification');
       }
     } else {
-      toast.error('Une erreur est survenue lors de l\'envoi du lien de réinitialisation');
+      toast.error('Une erreur est survenue lors de l\'envoi du code de vérification');
     }
   } finally {
     isLoading.value = false;

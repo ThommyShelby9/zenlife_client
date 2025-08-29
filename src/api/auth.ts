@@ -1,68 +1,65 @@
+/*  */
+
+// api/auth.ts - Méthodes API mises à jour
+
 import apiClient from './index';
-import type { RegisterPayload, LoginPayload, ForgotPasswordPayload, ChangePasswordPayload } from '@/types/auth';
+import api from './index';
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ValidateResetCodeRequest {
+  code: string;
+}
+
+export interface ResetPasswordRequest {
+  code: string;
+  password: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  fullName: string;
+  username: string;
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+}
+
+export interface UpdatePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
 
 export const authApi = {
-  /**
-   * Register a new user
-   */
-  register: (payload: RegisterPayload) => {
-    return apiClient.post('/auth/register', payload);
-  },
+  login: (data: LoginRequest) => api.post('/auth/login', data),
 
-  /**
-   * Login user
-   */
-  login: (payload: LoginPayload) => {
-    return apiClient.post('/auth/login', payload);
-  },
+  register: (data: RegisterRequest) => api.post('/auth/register', data),
 
-  /**
-   * Logout user
-   */
-  logout: () => {
-    return apiClient.post('/auth/logout');
-  },
+  logout: () => api.post('/auth/logout'),
 
-  /**
-   * Verify email with token
-   */
-  verifyEmail: (token: string) => {
+  forgotPassword: (data: ForgotPasswordRequest) => api.post('/auth/forgot-password', data),
+
+  validateResetCode: (data: ValidateResetCodeRequest) => api.post('/auth/validate-reset-code', data),
+
+  resetPassword: (data: ResetPasswordRequest) => api.post('/auth/reset-password', data),
+
+  changePassword: (data: UpdatePasswordRequest) => api.post('/auth/change-password', data),
+
+  validateToken: (token: string) => api.post('/auth/validate-token', { token }),
+
+  getCurrentUser: () => api.get('/auth/me'),
+
+  refreshToken: () => api.post('/auth/refresh'),
+
+    verifyEmail: (token: string) => {
     console.log('Appel à verifyEmail avec token:', token);
     return apiClient.post(`/auth/verify-email/${token}`);
-  },
-
-  /**
-   * Resend verification email
-   */
-  resendVerification: (email: string) => {
-    return apiClient.post('/auth/resend-verification', { email });
-  },
-
-  /**
-   * Request password reset email
-   */
-  forgotPassword: (payload: ForgotPasswordPayload) => {
-    return apiClient.post('/auth/forgot-password', payload);
-  },
-
-  /**
-   * Reset password with token
-   */
-  resetPassword: (payload: { token: string, newPassword: string }) => {
-    return apiClient.post(`/auth/reset-password/${payload.token}`, { newPassword: payload.newPassword });
-  },
-
-  /**
-   * Change user password
-   */
-  changePassword: (payload: ChangePasswordPayload) => {
-    return apiClient.post('/auth/change-password', payload);
-  },
-
-  /**
-   * Validate JWT token
-   */
-  validateToken: (token: string) => {
-    return apiClient.post('/auth/validate-token', { token });
   },
 };

@@ -1,3 +1,5 @@
+// stores/auth.ts - Store mis à jour
+
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { authApi } from '@/api/auth';
@@ -5,19 +7,32 @@ import type { User } from '@/types/auth';
 
 export const useAuthStore = defineStore('auth', () => {
   // State
-  const token = ref<string | null>(localStorage.getItem('token') || null);
+  const token = ref<string | null>(null);
   const user = ref<User | null>(null);
-  const isLoggedIn = ref<boolean>(!!token.value);
+  const isLoggedIn = ref<boolean>(false);
   const isLoading = ref<boolean>(false);
+
+  // Initialize from localStorage (if available)
+  const initializeAuth = () => {
+    if (typeof window !== 'undefined') {
+      const storedToken = localStorage.getItem('token');
+      if (storedToken) {
+        token.value = storedToken;
+        isLoggedIn.value = true;
+      }
+    }
+  };
 
   // Actions
   const setToken = (newToken: string | null) => {
     token.value = newToken;
 
-    if (newToken) {
-      localStorage.setItem('token', newToken);
-    } else {
-      localStorage.removeItem('token');
+    if (typeof window !== 'undefined') {
+      if (newToken) {
+        localStorage.setItem('token', newToken);
+      } else {
+        localStorage.removeItem('token');
+      }
     }
   };
 
@@ -64,6 +79,53 @@ export const useAuthStore = defineStore('auth', () => {
     }
   };
 
+  const forgotPassword = async (email: string) => {
+    isLoading.value = true;
+
+    try {
+      const response = await authApi.forgotPassword({ email });
+      return response.data;
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  const validateResetCode = async (code: string) => {
+    isLoading.value = true;
+
+    try {
+      const response = await authApi.validateResetCode({ code });
+      return response.data;
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  const resetPassword = async (code: string, password: string) => {
+    isLoading.value = true;
+
+    try {
+      const response = await authApi.resetPassword({ code, password });
+      return response.data;
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  const changePassword = async (currentPassword: string, newPassword: string) => {
+    isLoading.value = true;
+
+    try {
+      const response = await authApi.changePassword({
+        currentPassword,
+        newPassword,
+      });
+      return response.data;
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
   const logout = async () => {
     isLoading.value = true;
 
@@ -93,6 +155,9 @@ export const useAuthStore = defineStore('auth', () => {
     }
   };
 
+  // Initialize on store creation
+  initializeAuth();
+
   return {
     // State
     token,
@@ -106,6 +171,10 @@ export const useAuthStore = defineStore('auth', () => {
     setLoggedIn,
     login,
     register,
+    forgotPassword,
+    validateResetCode,
+    resetPassword,
+    changePassword,
     logout,
     validateToken,
   };

@@ -54,7 +54,7 @@ const routes: Array<RouteRecordRaw> = [
         meta: { requiresGuest: true }
       },
       {
-        path: 'reset-password/:token',
+        path: 'reset-password',
         name: 'ResetPassword',
         component: ResetPasswordView,
         meta: { requiresGuest: true }
